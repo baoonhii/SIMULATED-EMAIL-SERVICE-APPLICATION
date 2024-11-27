@@ -1,0 +1,16 @@
+{
+    "inbox": "Inbox",
+    "promotions": "Promotions",
+    "social": "Social",
+    "drafts": "Drafts",
+    "sent": "Sent",
+    "updates": "Updates",
+    "starred": "Starred",
+    "spam": "Spam",
+    "allMail": "All Mail",
+    "settings": "Settings",
+    "composeMail": "Compose an Email",
+    "findInMail": "Find in mails",
+    "yesterday": "Yesterday",
+    "mailDetail": "Mail detail"
+}

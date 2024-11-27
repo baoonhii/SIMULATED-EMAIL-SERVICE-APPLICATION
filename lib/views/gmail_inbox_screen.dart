@@ -1,19 +1,50 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import '../data_classes.dart';
+import '../other_widgets/email.dart';
 import 'gmail_base_screen.dart';
-import 'mock_data.dart';
 
 class GmailInboxScreen extends StatefulWidget {
+  const GmailInboxScreen({super.key});
+
   @override
-  _GmailInboxScreenState createState() => _GmailInboxScreenState();
+  State<GmailInboxScreen> createState() => _GmailInboxScreenState();
 }
 
 class _GmailInboxScreenState extends State<GmailInboxScreen> {
-  late List<MockEmail> emails;
+  late List<Email> emails;
+  bool isLoading = true;
+  bool hasError = false;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    emails = generateMockEmails(); // important here
+    fetchMails();
+  }
+
+  void fetchMails() async {
+    try {
+      String jsonString = await rootBundle.loadString('mock.json');
+      Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+      List<dynamic> emailsJson = jsonMap['emails'];
+      emails = emailsJson.map((json) => Email.fromJson(json)).toList();
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        errorMessage = 'Error fetching emails: $e';
+      });
+      print(errorMessage);
+    }
   }
 
   @override
@@ -22,53 +53,38 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
       title: 'Inbox',
       appBarWidget: TextField(
         decoration: InputDecoration(
-          hintText: 'Tìm kiếm trong thư',
-          hintStyle: TextStyle(color: Colors.grey),
+          hintText: AppLocalizations.of(context)!.findInMail,
+          hintStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           border: InputBorder.none,
         ),
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
-      body: ListView.builder(
-        itemCount: emails.length,
-        itemBuilder: (context, index) {
-          final email = emails[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.red,
-              child: Text(email.sender[0]),
-            ),
-            title: Text(
-              email.subject,
-              style: TextStyle(
-                fontWeight: email.isRead ? FontWeight.normal : FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(email.sender),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('12:30 PM'),
-                Icon(
-                  email.isRead ? Icons.star_border : Icons.star,
-                  color: Colors.white,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : hasError
+              ? Center(child: Text(errorMessage))
+              : ListView.builder(
+                  itemCount: emails.length,
+                  itemBuilder: (context, index) {
+                    final email = emails[index];
+                    return getEmailTile(
+                      emails[index],
+                      () {
+                        print(email);
+                        Navigator.pushNamed(context, '/emailDetail', arguments: email);
+                      },
+                      context,
+                    );
+                  },
                 ),
-              ],
-            ),
-            onTap: () {
-              setState(() {
-                emails[index] = email.copyWith(isRead: true);
-              });
-              Navigator.pushNamed(context, '/emailDetail', arguments: email);
-            },
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, '/compose');
         },
-        label: Text('Soạn thư'),
-        icon: Icon(Icons.edit),
+        label: Text(AppLocalizations.of(context)!.composeMail),
+        icon: const Icon(Icons.edit),
       ),
     );
   }

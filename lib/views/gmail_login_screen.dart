@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'gmail_password_screen.dart';
 
 class GmailLoginScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
+
+  GmailLoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(
+        title: const Center(
             child: Text('Google',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
       ),
@@ -17,17 +18,17 @@ class GmailLoginScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Đăng nhập',
+            const Text('Đăng nhập',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Sử dụng Tài khoản Google của bạn.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email hoặc số điện thoại',
                 labelStyle: TextStyle(color: Colors.grey),
                 focusedBorder: UnderlineInputBorder(
@@ -36,27 +37,27 @@ class GmailLoginScreen extends StatelessWidget {
               ),
               keyboardType: TextInputType.emailAddress,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: () {},
-              child: Text('Bạn quên địa chỉ email?',
+              child: const Text('Bạn quên địa chỉ email?',
                   style: TextStyle(color: Colors.blue)),
             ),
-            Spacer(),
+            const Spacer(),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/password',
                     arguments: _emailController.text);
               },
-              child: Text('Tiếp theo'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text('Tiếp theo'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/register');
               },
-              child:
-                  Text('Tạo tài khoản', style: TextStyle(color: Colors.blue)),
+              child: const Text('Tạo tài khoản',
+                  style: TextStyle(color: Colors.blue)),
             ),
           ],
         ),

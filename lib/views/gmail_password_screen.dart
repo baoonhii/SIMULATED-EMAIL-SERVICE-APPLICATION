@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 class GmailPasswordScreen extends StatefulWidget {
   final String email;
 
-  GmailPasswordScreen({required this.email});
+  const GmailPasswordScreen({super.key, required this.email});
 
   @override
-  _GmailPasswordScreenState createState() => _GmailPasswordScreenState();
+  State<GmailPasswordScreen> createState() => _GmailPasswordScreenState();
 }
 
 class _GmailPasswordScreenState extends State<GmailPasswordScreen> {
@@ -17,7 +17,7 @@ class _GmailPasswordScreenState extends State<GmailPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(
+        title: const Center(
           child: Text(
             'Google',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -29,20 +29,20 @@ class _GmailPasswordScreenState extends State<GmailPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Chào mừng',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             Text(widget.email,
-                style: TextStyle(fontSize: 18, color: Colors.grey)),
-            SizedBox(height: 16),
+                style: const TextStyle(fontSize: 18, color: Colors.grey)),
+            const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
                 labelText: 'Nhập mật khẩu của bạn',
-                labelStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
+                labelStyle: const TextStyle(color: Colors.grey),
+                focusedBorder: const UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.blue),
                 ),
                 suffixIcon: IconButton(
@@ -58,20 +58,20 @@ class _GmailPasswordScreenState extends State<GmailPasswordScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: () {},
-              child:
-                  Text('Thử cách khác', style: TextStyle(color: Colors.blue)),
+              child: const Text('Thử cách khác',
+                  style: TextStyle(color: Colors.blue)),
             ),
-            Spacer(),
+            const Spacer(),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/welcome',
                     arguments: widget.email);
               },
-              child: Text('Tiếp theo'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text('Tiếp theo'),
             ),
           ],
         ),

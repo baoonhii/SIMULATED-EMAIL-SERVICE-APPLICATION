@@ -1,0 +1,38 @@
+{
+    "emails": [
+        {
+            "mailID": "1",
+            "senderAddress": "JohnDoe@gotmail.com",
+            "receiverAddress": "JaneDoe@gotmail.com",
+            "contentSubject": "Important Meeting",
+            "contentBody": "Please join the meeting at 3 PM today",
+            "timeSent": "2023-10-05T15:00:00Z",
+            "isStarred": false,
+            "isRead": false,
+            "isSpam": false
+        },
+        {
+            "mailID": "2",
+            "senderAddress": "AliceSmith@gotmail.com",
+            "receiverAddress": "BobJohnson@gotmail.com",
+            "contentSubject": "Project Update",
+            "contentBody": "The project is on track and will be completed by the end of the month.",
+            "timeSent": "2023-10-06T10:30:00Z",
+            "isStarred": true,
+            "isRead": true,
+            "isSpam": false
+        },
+        {
+            "mailID": "3",
+            "senderAddress": "CharlieBrown@gotmail.com",
+            "receiverAddress": "DavidWilson@gotmail.com",
+            "contentSubject": "Vacation Plans",
+            "contentBody": "I am planning a vacation next month. Let me know if you want to join.",
+            "timeSent": "2023-10-07T08:45:00Z",
+            "isStarred": false,
+            "isRead": false,
+            "isSpam": true
+        }
+    ],
+    "nothing": "nothing"
+}

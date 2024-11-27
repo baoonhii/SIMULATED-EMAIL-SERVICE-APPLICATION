@@ -13,7 +13,7 @@ class _GmailSentMailScreenState extends State<GmailSentMailScreen> {
   @override
   void initState() {
     super.initState();
-    sentEmails = generateMockSentEmails();git 
+    sentEmails = generateMockSentEmails();
   }
 
   @override

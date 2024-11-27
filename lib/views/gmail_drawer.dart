@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../other_widgets/drawer.dart';
 
 class GmailDrawer extends StatelessWidget {
   final String userName;
@@ -8,81 +9,135 @@ class GmailDrawer extends StatelessWidget {
   GmailDrawer({
     this.userName = 'Email User',
     this.userEmail = 'emailuser@gmail.com',
-    this.profileImageUrl = 'https://via.placeholder.com/150',
+    this.profileImageUrl = 'assets/placeholder.jpg',
   });
 
   @override
   Widget build(BuildContext context) {
-    // Use the theme colors to adapt to dark mode and light mode
-    Color textColor = Theme.of(context).textTheme.bodyLarge!.color!;
+    Color textColor = Theme.of(context).colorScheme.onPrimary;
     Color iconColor = Theme.of(context).iconTheme.color!;
-    Color drawerHeaderColor = Theme.of(context).primaryColor;
+    Color drawerHeaderColor = Theme.of(context).colorScheme.primary;
     Color dividerColor = Theme.of(context).dividerColor;
+    Color drawerTextColor = Theme.of(context).colorScheme.onSurface;
+
+    ListTile drawerItem(
+      IconData icon,
+      String titleKey,
+      String route,
+      BuildContext context,
+    ) {
+      return buildDrawerItem(
+        icon,
+        titleKey,
+        route,
+        context,
+        drawerTextColor,
+        iconColor,
+      );
+    }
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          UserAccountsDrawerHeader(
-            decoration: BoxDecoration(
-              color: drawerHeaderColor,
-            ),
-            accountName: Text(
-              userName,
-              style: TextStyle(color: textColor),
-            ),
-            accountEmail: Text(
-              userEmail,
-              style: TextStyle(color: textColor.withOpacity(0.7)),
-            ),
-            currentAccountPicture: CircleAvatar(
-              backgroundImage: NetworkImage(profileImageUrl),
-            ),
-            otherAccountsPictures: [
-              IconButton(
-                icon: Icon(Icons.edit, color: textColor),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/editProfile');
-                },
-              ),
-            ],
+          getDrawerHeadere(drawerHeaderColor, textColor, context),
+          drawerItem(
+            Icons.inbox,
+            'inbox',
+            '/inbox',
+            context,
           ),
-          _buildDrawerItem(
-              Icons.inbox, 'Chính', '/inbox', context, textColor, iconColor),
-          _buildDrawerItem(Icons.local_offer, 'Quảng cáo', '/promotions',
-              context, textColor, iconColor),
-          _buildDrawerItem(Icons.people, 'Mạng xã hội', '/social', context,
-              textColor, iconColor),
-          _buildDrawerItem(
-              Icons.drafts, 'Drafts', '/drafts', context, textColor, iconColor),
-          _buildDrawerItem(
-              Icons.send, 'Đã gửi', '/sent', context, textColor, iconColor),
-          _buildDrawerItem(Icons.info, 'Cập nhật', '/updates', context,
-              textColor, iconColor),
+          drawerItem(
+            Icons.local_offer,
+            'promotions',
+            '/promotions',
+            context,
+          ),
+          drawerItem(
+            Icons.people,
+            'social',
+            '/social',
+            context,
+          ),
+          drawerItem(
+            Icons.drafts,
+            'drafts',
+            '/drafts',
+            context,
+          ),
+          drawerItem(
+            Icons.send,
+            'sent',
+            '/sent',
+            context,
+          ),
+          drawerItem(
+            Icons.info,
+            'updates',
+            '/updates',
+            context,
+          ),
+          Divider(
+            color: dividerColor,
+          ),
+          drawerItem(
+            Icons.star,
+            'starred',
+            '/starred',
+            context,
+          ),
+          drawerItem(
+            Icons.delete,
+            'spam',
+            '/spam',
+            context,
+          ),
+          drawerItem(
+            Icons.all_inbox,
+            'allMail',
+            '/allMail',
+            context,
+          ),
           Divider(color: dividerColor),
-          _buildDrawerItem(Icons.star, 'Có gắn dấu sao', '/starred', context,
-              textColor, iconColor),
-          _buildDrawerItem(
-              Icons.delete, 'Thư rác', '/spam', context, textColor, iconColor),
-          _buildDrawerItem(Icons.all_inbox, 'Tất cả thư', '/allMail', context,
-              textColor, iconColor),
-          Divider(color: dividerColor),
-          _buildDrawerItem(Icons.settings, 'Cài đặt', '/settings', context,
-              textColor, iconColor),
+          drawerItem(
+            Icons.settings,
+            'settings',
+            'settings/userSettings',
+            context,
+          ),
         ],
       ),
     );
   }
 
-  // Helper method to create Drawer items
-  ListTile _buildDrawerItem(IconData icon, String title, String route,
-      BuildContext context, Color textColor, Color iconColor) {
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(title, style: TextStyle(color: textColor)),
-      onTap: () {
-        Navigator.pushNamed(context, route);
-      },
+  UserAccountsDrawerHeader getDrawerHeadere(
+    Color drawerHeaderColor,
+    Color textColor,
+    BuildContext context,
+  ) {
+    return UserAccountsDrawerHeader(
+      decoration: BoxDecoration(
+        color: drawerHeaderColor,
+      ),
+      accountName: Text(
+        userName,
+        style: TextStyle(color: textColor),
+      ),
+      accountEmail: Text(
+        userEmail,
+        style: TextStyle(color: textColor.withOpacity(0.7)),
+      ),
+      currentAccountPicture: CircleAvatar(
+        backgroundImage: NetworkImage(profileImageUrl),
+      ),
+      otherAccountsPictures: [
+        IconButton(
+          icon: Icon(Icons.edit, color: textColor),
+          onPressed: () {
+            Navigator.pushNamed(context, 'auth/editProfile');
+          },
+        ),
+      ],
     );
   }
 }
