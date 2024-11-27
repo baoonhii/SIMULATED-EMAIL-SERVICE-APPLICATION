@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'mock_data.dart';
 
 class GmailEmailDetailScreen extends StatelessWidget {
   @override

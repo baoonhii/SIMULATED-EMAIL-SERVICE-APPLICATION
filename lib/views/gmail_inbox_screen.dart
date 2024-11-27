@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'gmail_base_screen.dart';
 import 'mock_data.dart';
+import 'package:intl/intl.dart';
 
 class GmailInboxScreen extends StatefulWidget {
   @override
@@ -34,7 +35,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
           final email = emails[index];
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.pink,
               child: Text(email.sender[0]),
             ),
             title: Text(
@@ -47,10 +48,23 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('12:30 PM'),
-                Icon(
-                  email.isRead ? Icons.star_border : Icons.star,
-                  color: Colors.white,
+                Text(
+                  DateFormat('h:mm a').format(email.timestamp),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: email.isRead ? Colors.blue : Colors.red,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      emails[index] = email.copyWith(isStarred: !email.isStarred);
+                    });
+                  },
+                  child: Icon(
+                    email.isStarred ? Icons.star : Icons.star_border,
+                    color: email.isStarred ? Colors.yellow : Colors.white,
+                  ),
                 ),
               ],
             ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'gmail_login_screen.dart';
+
 
 class UserSettingsScreen extends StatelessWidget {
   final VoidCallback onThemeToggle;
@@ -75,7 +77,10 @@ class UserSettingsScreen extends StatelessWidget {
             leading: Icon(Icons.logout, color: Colors.red),
             title: Text('Logout'),
             onTap: () {
-              // Handle logout functionality here
+              Navigator.of(context). pushAndRemoveUntil(
+                MaterialPageRoute(builder:  (context) => GmailLoginScreen()),
+                (Route<dynamic> route) => false,
+              );
             },
           ),
         ],

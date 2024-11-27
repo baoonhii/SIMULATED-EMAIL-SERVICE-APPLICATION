@@ -13,7 +13,7 @@ class _GmailSentMailScreenState extends State<GmailSentMailScreen> {
   @override
   void initState() {
     super.initState();
-    sentEmails = generateMockSentEmails();git 
+    sentEmails = generateMockSentEmails(); 
   }
 
   @override
@@ -43,12 +43,19 @@ class _GmailSentMailScreenState extends State<GmailSentMailScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  formatSentTime(email.sentTime),
-                  style: TextStyle(color: Colors.grey),
+                  formatSentTime(email.timestamp),
+                  style: TextStyle(color: Colors.blue),
                 ),
-                Icon(
-                  email.isStarred ? Icons.star : Icons.star_border,
-                  color: email.isStarred ? Colors.yellow : Colors.grey,
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      sentEmails[index] = email.copyWith(isStarred: !email.isStarred);
+                    });
+                  },
+                  child: Icon(
+                    email.isStarred ? Icons.star : Icons.star_border,
+                    color: email.isStarred ? Colors.yellow : Colors.grey,
+                  ),
                 ),
               ],
             ),
