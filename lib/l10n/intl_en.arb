@@ -12,5 +12,11 @@
     "composeMail": "Compose an Email",
     "findInMail": "Find in mails",
     "yesterday": "Yesterday",
-    "mailDetail": "Mail detail"
+    "mailDetail": "Mail detail",
+    "createAccount": "Create account",
+    "forgotPassword": "Forgot password",
+    "password": "Password",
+    "signin": "Sign in",
+    "language_EN": "English",
+    "language_VI": "Vietnamese"
 }

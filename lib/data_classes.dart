@@ -66,3 +66,11 @@ class Email {
     );
   }
 }
+
+class Account {
+  final String userID;
+  final String email;
+  final String userName;
+
+  Account({required this.userID, required this.email, required this.userName});
+}

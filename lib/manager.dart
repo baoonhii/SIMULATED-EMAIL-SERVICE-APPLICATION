@@ -52,7 +52,7 @@ class MainManager extends RouterManager {
   static PageRouteBuilder redirector(BuildContext context, String path, {Object? arguments}) {
     final Map<String, WidgetBuilder> routeMap = {
       '/': (context) => const GmailLoginScreen(),
-      '/inbox': (context) => const GmailInboxScreen(),
+      '/inbox': (context) => GmailInboxScreen(currentAccount: arguments as Account),
       '/emailDetail': (context) => GmailEmailDetailScreen(email: arguments as Email),
     };
 

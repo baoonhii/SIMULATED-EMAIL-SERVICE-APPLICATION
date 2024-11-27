@@ -6,3 +6,5 @@ enum Settings {
   const Settings(this.value);
   final String value;
 }
+
+const placeholderImage = 'assets/placeholder.jpg';

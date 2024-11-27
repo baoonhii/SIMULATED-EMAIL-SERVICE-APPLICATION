@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import '../constants.dart';
+import '../data_classes.dart';
 import '../other_widgets/drawer.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class GmailDrawer extends StatelessWidget {
-  final String userName;
-  final String userEmail;
-  final String profileImageUrl;
+  final Account currentAccount;
 
-  GmailDrawer({
-    this.userName = 'Email User',
-    this.userEmail = 'emailuser@gmail.com',
-    this.profileImageUrl = 'assets/placeholder.jpg',
+  const GmailDrawer({
+    super.key,
+    required this.currentAccount,
   });
 
   @override
@@ -20,12 +20,11 @@ class GmailDrawer extends StatelessWidget {
     Color dividerColor = Theme.of(context).dividerColor;
     Color drawerTextColor = Theme.of(context).colorScheme.onSurface;
 
-    ListTile drawerItem(
-      IconData icon,
-      String titleKey,
-      String route,
-      BuildContext context,
-    ) {
+    ListTile drawerItem({
+      required IconData icon,
+      required String titleKey,
+      required String route,
+    }) {
       return buildDrawerItem(
         icon,
         titleKey,
@@ -36,81 +35,94 @@ class GmailDrawer extends StatelessWidget {
       );
     }
 
+    Map<String, Map<String, dynamic>> drawerGroup_1 = {
+      "inbox": {
+        "icon": Icons.inbox,
+        "titleKey": AppLocalizations.of(context)!.inbox,
+        "route": '/inbox'
+      },
+      "promotions": {
+        "icon": Icons.local_offer,
+        "titleKey": AppLocalizations.of(context)!.promotions,
+        "route": '/promotions'
+      },
+      "social": {
+        "icon": Icons.people,
+        "titleKey": AppLocalizations.of(context)!.social,
+        "route": '/social'
+      },
+      "drafts": {
+        "icon": Icons.drafts,
+        "titleKey": AppLocalizations.of(context)!.drafts,
+        "route": '/drafts'
+      },
+      "sent": {
+        "icon": Icons.send,
+        "titleKey": AppLocalizations.of(context)!.sent,
+        "route": '/sent'
+      },
+      "updates": {
+        "icon": Icons.info,
+        "titleKey": AppLocalizations.of(context)!.updates,
+        "route": '/updates'
+      },
+    };
+
+    Map<String, Map<String, dynamic>> drawerGroup_2 = {
+      "starred": {
+        "icon": Icons.star,
+        "titleKey": AppLocalizations.of(context)!.starred,
+        "route": '/starred'
+      },
+      "spam": {
+        "icon": Icons.delete,
+        "titleKey": AppLocalizations.of(context)!.spam,
+        "route": '/spam'
+      },
+      "allMail": {
+        "icon": Icons.all_inbox,
+        "titleKey": AppLocalizations.of(context)!.allMail,
+        "route": '/allMail'
+      },
+    };
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          getDrawerHeadere(drawerHeaderColor, textColor, context),
-          drawerItem(
-            Icons.inbox,
-            'inbox',
-            '/inbox',
-            context,
-          ),
-          drawerItem(
-            Icons.local_offer,
-            'promotions',
-            '/promotions',
-            context,
-          ),
-          drawerItem(
-            Icons.people,
-            'social',
-            '/social',
-            context,
-          ),
-          drawerItem(
-            Icons.drafts,
-            'drafts',
-            '/drafts',
-            context,
-          ),
-          drawerItem(
-            Icons.send,
-            'sent',
-            '/sent',
-            context,
-          ),
-          drawerItem(
-            Icons.info,
-            'updates',
-            '/updates',
-            context,
-          ),
+          getDrawerHeader(drawerHeaderColor, textColor, context),
           Divider(
             color: dividerColor,
           ),
-          drawerItem(
-            Icons.star,
-            'starred',
-            '/starred',
-            context,
+          ...drawerGroup_1.values.map((value) {
+            return drawerItem(
+              icon: value["icon"],
+              titleKey: value["titleKey"],
+              route: value["route"],
+            );
+          }),
+          Divider(
+            color: dividerColor,
           ),
-          drawerItem(
-            Icons.delete,
-            'spam',
-            '/spam',
-            context,
-          ),
-          drawerItem(
-            Icons.all_inbox,
-            'allMail',
-            '/allMail',
-            context,
-          ),
+          ...drawerGroup_2.values.map((value) {
+            return drawerItem(
+              icon: value["icon"],
+              titleKey: value["titleKey"],
+              route: value["route"],
+            );
+          }),
           Divider(color: dividerColor),
           drawerItem(
-            Icons.settings,
-            'settings',
-            'settings/userSettings',
-            context,
+            icon: Icons.settings,
+            titleKey: AppLocalizations.of(context)!.settings,
+            route: 'settings/userSettings',
           ),
         ],
       ),
     );
   }
 
-  UserAccountsDrawerHeader getDrawerHeadere(
+  UserAccountsDrawerHeader getDrawerHeader(
     Color drawerHeaderColor,
     Color textColor,
     BuildContext context,
@@ -120,15 +132,15 @@ class GmailDrawer extends StatelessWidget {
         color: drawerHeaderColor,
       ),
       accountName: Text(
-        userName,
+        currentAccount.userName,
         style: TextStyle(color: textColor),
       ),
       accountEmail: Text(
-        userEmail,
+        currentAccount.email,
         style: TextStyle(color: textColor.withOpacity(0.7)),
       ),
-      currentAccountPicture: CircleAvatar(
-        backgroundImage: NetworkImage(profileImageUrl),
+      currentAccountPicture: const CircleAvatar(
+        backgroundImage: NetworkImage(placeholderImage),
       ),
       otherAccountsPictures: [
         IconButton(

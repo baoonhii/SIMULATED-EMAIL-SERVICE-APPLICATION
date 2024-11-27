@@ -12,5 +12,11 @@
     "composeMail": "Soạn thư",
     "findInMail": "Tìm kiếm trong thư",
     "yesterday": "Hôm qua",
-    "mailDetail": "Chi tiết thư"
+    "mailDetail": "Chi tiết thư",
+    "createAccount": "Tạo tài khoản",
+    "forgotPassword": "Quên mật khẩu",
+    "password": "Mật khẩu",
+    "signin": "Đăng nhập",
+    "language_EN": "Tiếng Anh",
+    "language_VI": "Tiếng Việt"
 }

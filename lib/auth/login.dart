@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_email/data_classes.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../utils/validators.dart';
 
@@ -30,7 +33,15 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         });
         // Navigate to next screen or show success
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/inbox');
+          Navigator.pushReplacementNamed(
+            context,
+            '/inbox',
+            arguments: Account(
+              userID: "testUserID",
+              email: "testUser@mail.com",
+              userName: "testuser",
+            ),
+          );
         }
       });
     }
@@ -47,7 +58,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign In'),
+        title: Text(AppLocalizations.of(context)!.signin),
         centerTitle: true,
       ),
       body: Padding(
@@ -67,7 +78,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   getForgetPasswordButton(),
-                  getRegisterButton(context),
+                  getRegisterButton(),
                 ],
               ),
             ],
@@ -85,7 +96,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
       ),
       child: _isLoading
           ? const CircularProgressIndicator()
-          : const Text('Sign In'),
+          : Text(AppLocalizations.of(context)!.signin),
     );
   }
 
@@ -106,7 +117,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: AppLocalizations.of(context)!.password,
         border: const OutlineInputBorder(),
         suffixIcon: IconButton(
           icon: Icon(
@@ -123,13 +134,13 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
     );
   }
 
-  TextButton getRegisterButton(BuildContext context) {
+  TextButton getRegisterButton() {
     return TextButton(
       onPressed: () {
         // Create account logic
         Navigator.pushNamed(context, '/register');
       },
-      child: const Text('Create account'),
+      child: Text(AppLocalizations.of(context)!.createAccount),
     );
   }
 
@@ -138,7 +149,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
       onPressed: () {
         // Forgot password logic
       },
-      child: const Text('Forgot password?'),
+      child: Text("${AppLocalizations.of(context)!.forgotPassword}?"),
     );
   }
 }
