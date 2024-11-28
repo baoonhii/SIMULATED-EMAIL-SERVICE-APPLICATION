@@ -116,3 +116,10 @@ class NotificationData {
     };
   }
 }
+
+class UserSetting {
+  final String autoReplyMessage;
+  final String userProfileURL;
+
+  UserSetting({required this.autoReplyMessage, required this.userProfileURL});
+}

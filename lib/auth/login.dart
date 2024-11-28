@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../state_management/account_provider.dart';
 import '../utils/validators.dart';
+import '../views/gmail_base_screen.dart';
 
 class GmailLoginScreen extends StatefulWidget {
   const GmailLoginScreen({super.key});
@@ -19,6 +20,8 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final FocusNode _focusNode = FocusNode();
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
@@ -64,10 +67,10 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         );
 
         if (account != null) {
-          
           // Navigate to next screen or show success
           if (mounted) {
-            final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+            final accountProvider =
+                Provider.of<AccountProvider>(context, listen: false);
             accountProvider.setCurrentAccount(account);
             Navigator.pushReplacementNamed(
               context,
@@ -105,16 +108,15 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.signin),
-        centerTitle: true,
-      ),
+    return GmailBaseScreen(
+      title: AppLocalizations.of(context)!.signin,
+      addDrawer: false,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

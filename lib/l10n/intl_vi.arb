@@ -16,6 +16,7 @@
     "createAccount": "Tạo tài khoản",
     "forgotPassword": "Quên mật khẩu",
     "password": "Mật khẩu",
+    "rePassword": "Nhập lại mật khẩu",
     "signin": "Đăng nhập",
     "language_EN": "Tiếng Anh",
     "language_VI": "Tiếng Việt",
@@ -34,5 +35,7 @@
     "notifications": "Thông báo",
     "turnOnAutoRep": "Bật trả lời tự động",
     "autoRepMessage": "Tin nhắn tự động",
-    "autoRepMessageHint": "Nhập tin nhắn tự động của bạn ở đây"
+    "autoRepMessageHint": "Nhập tin nhắn tự động của bạn ở đây",
+    "hello": "Xin chào",
+    "continueNext": "Tiếp tục"
 }

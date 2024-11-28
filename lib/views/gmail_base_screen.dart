@@ -9,6 +9,7 @@ class GmailBaseScreen extends StatefulWidget {
   final Widget body;
   final Widget? appBarWidget;
   final FloatingActionButton? floatingActionButton;
+  final bool addDrawer;
 
   const GmailBaseScreen({
     super.key,
@@ -16,6 +17,7 @@ class GmailBaseScreen extends StatefulWidget {
     required this.body,
     this.appBarWidget,
     this.floatingActionButton,
+    this.addDrawer = true,
   });
 
   @override
@@ -34,6 +36,8 @@ class _GmailBaseScreenState extends State<GmailBaseScreen> {
           context,
         );
 
+    final drawer = widget.addDrawer ? const GmailDrawer() : null;
+
     return Scaffold(
       appBar: AppBar(
         title: widget.appBarWidget ?? Text(widget.title),
@@ -44,7 +48,7 @@ class _GmailBaseScreenState extends State<GmailBaseScreen> {
           _focusNode,
         ),
       ),
-      drawer: const GmailDrawer(),
+      drawer: drawer,
       body: GestureDetector(
         onTap: () {
           // Unfocus the dropdown when the body is tapped

@@ -16,6 +16,7 @@
     "createAccount": "Create account",
     "forgotPassword": "Forgot password",
     "password": "Password",
+    "rePassword": "Re-enter password",
     "signin": "Sign in",
     "language_EN": "English",
     "language_VI": "Vietnamese",
@@ -34,5 +35,7 @@
     "notifications": "Notifications",
     "turnOnAutoRep": "Turn on Auto-reply",
     "autoRepMessage": "Auto-reply",
-    "autoRepMessageHint": "Enter a message that will be sent automatically"
+    "autoRepMessageHint": "Enter a message that will be sent automatically",
+    "hello": "Hello",
+    "continueNext": "Continue"
 }

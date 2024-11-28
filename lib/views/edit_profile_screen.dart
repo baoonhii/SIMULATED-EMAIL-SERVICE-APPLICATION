@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../constants.dart';
-import '../data_classes.dart';
+import 'gmail_base_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final Account currentAccount;
-  const EditProfileScreen({super.key, required this.currentAccount});
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -14,15 +13,13 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-
   final TextEditingController _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.createAccount),
-      ),
+    return GmailBaseScreen(
+      title: AppLocalizations.of(context)!.createAccount,
+      addDrawer: false,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -52,8 +49,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              child: Text(AppLocalizations.of(context)!.saveSettingChanges),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.saveSettingChanges,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             ),
           ],
         ),

@@ -4,6 +4,7 @@ import 'package:flutter_email/data_classes.dart';
 import 'auth/login.dart';
 import 'constants.dart';
 import 'views/auto_reply_settings_screen.dart';
+import 'views/edit_profile_screen.dart';
 import 'views/gmail_email_detail_screen.dart';
 import 'views/gmail_inbox_screen.dart';
 import 'views/gmail_register_screen.dart';
@@ -78,6 +79,7 @@ class SettingManager extends RouterManager {
     final Map<String, WidgetBuilder> routeMap = {
       SettingsRoutes.USER.value: (context) => const UserSettingsScreen(),
       SettingsRoutes.AUTOREP.value: (context) => const AutoReplySettingsScreen(),
+      SettingsRoutes.EDITPROFILE.value: (context) => const EditProfileScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();

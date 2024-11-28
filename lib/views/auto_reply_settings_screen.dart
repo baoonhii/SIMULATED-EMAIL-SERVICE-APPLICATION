@@ -19,6 +19,7 @@ class _AutoReplySettingsScreenState extends State<AutoReplySettingsScreen> {
   Widget build(BuildContext context) {
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.autoRepSetting,
+      addDrawer: false,
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

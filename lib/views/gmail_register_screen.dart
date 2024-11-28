@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class GmailRegisterScreen extends StatelessWidget {
+class GmailRegisterScreen extends StatefulWidget {
+  const GmailRegisterScreen({super.key});
+
+  @override
+  State<GmailRegisterScreen> createState() => _GmailRegisterScreenState();
+}
+
+class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -10,7 +18,7 @@ class GmailRegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tạo tài khoản Google'),
+        title: Text(AppLocalizations.of(context)!.createAccount),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -21,48 +29,49 @@ class GmailRegisterScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Tạo tài khoản Google',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.hello,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _surnameController,
-                  decoration: InputDecoration(
-                    labelText: 'Họ (tùy chọn)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 16),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Tên',
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,
                   decoration: InputDecoration(
-                    labelText: 'Mật khẩu',
-                    border: OutlineInputBorder(),
+                    labelText: AppLocalizations.of(context)!.password,
+                    border: const OutlineInputBorder(),
                   ),
                   obscureText: true,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.rePassword,
+                    border: const OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/basic-info');
+                    Navigator.pushNamed(context, '/');
                   },
-                  child: Text('Tiếp theo'),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    textStyle: TextStyle(fontSize: 18),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18),
                   ),
+                  child: Text(AppLocalizations.of(context)!.continueNext),
                 ),
               ],
             ),
