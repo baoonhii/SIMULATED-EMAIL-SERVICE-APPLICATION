@@ -18,5 +18,6 @@
     "password": "Password",
     "signin": "Sign in",
     "language_EN": "English",
-    "language_VI": "Vietnamese"
+    "language_VI": "Vietnamese",
+    "invalidAuth": "Invalid email or password"
 }

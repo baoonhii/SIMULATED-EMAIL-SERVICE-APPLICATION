@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_email/data_classes.dart';
-
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import '../constants.dart';
 import '../utils/validators.dart';
 
 class GmailLoginScreen extends StatefulWidget {
@@ -19,6 +20,28 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  List<Account> _mockDatabase = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMockDatabase();
+  }
+
+  Future<void> _loadMockDatabase() async {
+    try {
+      String jsonString = await rootBundle.loadString('mock.json');
+      Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+      List<dynamic> accountsJson = jsonMap['accounts'];
+
+      setState(() {
+        _mockDatabase =
+            accountsJson.map((json) => Account.fromJson(json)).toList();
+      });
+    } catch (e) {
+      print('Error loading mock database: $e');
+    }
+  }
 
   void _login() {
     if (_formKey.currentState?.validate() ?? false) {
@@ -31,20 +54,47 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        // Navigate to next screen or show success
-        if (mounted) {
-          Navigator.pushReplacementNamed(
-            context,
-            '/inbox',
-            arguments: Account(
-              userID: "testUserID",
-              email: "testUser@mail.com",
-              userName: "testuser",
-            ),
-          );
+
+        // Mock authentication
+        Account? account = _authenticateUser(
+          _emailController.text,
+          _passwordController.text,
+        );
+
+        if (account != null) {
+          // Navigate to next screen or show success
+          if (mounted) {
+            Navigator.pushReplacementNamed(
+              context,
+              MailRoutes.INBOX.value,
+              arguments: account,
+            );
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.invalidAuth),
+              ),
+            );
+          }
         }
       });
     }
+  }
+
+  Account? _authenticateUser(String email, String password) {
+    // Simulate checking the email and password against the mock database
+    for (var account in _mockDatabase) {
+      if (account.email == email
+          //  && password == "password123"
+          ) {
+        // Return the account if the email and password match
+        return account;
+      }
+    }
+    return null;
   }
 
   @override
@@ -138,7 +188,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
     return TextButton(
       onPressed: () {
         // Create account logic
-        Navigator.pushNamed(context, '/register');
+        Navigator.pushNamed(context, AuthRoutes.REGISTER.value);
       },
       child: Text(AppLocalizations.of(context)!.createAccount),
     );

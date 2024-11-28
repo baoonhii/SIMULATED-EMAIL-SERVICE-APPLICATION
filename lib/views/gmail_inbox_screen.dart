@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../constants.dart';
 import '../data_classes.dart';
 import '../other_widgets/email.dart';
 import '../state_management/email_provider.dart';
@@ -59,7 +60,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
                 () {
                   Navigator.pushNamed(
                     context,
-                    '/emailDetail',
+                    MailRoutes.EMAIL_DETAIL.value,
                     arguments: email,
                   );
                 },
@@ -71,7 +72,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.pushNamed(context, '/compose');
+          Navigator.pushNamed(context, MailRoutes.COMPOSE.value);
         },
         label: Text(AppLocalizations.of(context)!.composeMail),
         icon: const Icon(Icons.edit),

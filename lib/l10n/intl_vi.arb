@@ -18,5 +18,6 @@
     "password": "Mật khẩu",
     "signin": "Đăng nhập",
     "language_EN": "Tiếng Anh",
-    "language_VI": "Tiếng Việt"
+    "language_VI": "Tiếng Việt",
+    "invalidAuth": "Sai địa chỉ hoặc mật khẩu"
 }

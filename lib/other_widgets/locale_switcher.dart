@@ -11,8 +11,12 @@ const TextStyle dropdownTextStyle = TextStyle(
   color: Colors.black,
 );
 
-List<Widget> getLanguageChangeDropdown(Locale currentLocale,
-    BuildContext context, LocaleProvider localeProvider, FocusNode focusNode) {
+List<Widget> getLanguageChangeDropdown(
+  Locale currentLocale,
+  BuildContext context,
+  LocaleProvider localeProvider,
+  FocusNode focusNode,
+) {
   return [
     SizedBox(
       width: 200,

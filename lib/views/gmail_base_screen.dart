@@ -32,14 +32,20 @@ class _GmailBaseScreenState extends State<GmailBaseScreen> {
   Widget build(BuildContext context) {
     // Get the current locale from LocaleProvider
     final localeProvider = Provider.of<LocaleProvider>(context);
-    final currentLocale =
-        localeProvider.locale ?? Localizations.localeOf(context);
+    final currentLocale = localeProvider.locale ??
+        Localizations.localeOf(
+          context,
+        );
 
     return Scaffold(
       appBar: AppBar(
         title: widget.appBarWidget ?? Text(widget.title),
         actions: getLanguageChangeDropdown(
-            currentLocale, context, localeProvider, _focusNode),
+          currentLocale,
+          context,
+          localeProvider,
+          _focusNode,
+        ),
       ),
       drawer: GmailDrawer(currentAccount: widget.currentAccount),
       body: GestureDetector(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'constants.dart';
 import 'state_management/email_provider.dart';
 import 'state_management/locale_provider.dart';
 import 'manager.dart';
@@ -23,20 +24,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Access the LocaleProvider
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp(
-      title: 'GotMail',
+      title: appName,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: localeProvider.locale, // Use provider's locale
+      locale: localeProvider.locale,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: AuthRoutes.LOGIN.value,
       onGenerateRoute: (settings) => getRouterManager(settings, context),
     );
   }

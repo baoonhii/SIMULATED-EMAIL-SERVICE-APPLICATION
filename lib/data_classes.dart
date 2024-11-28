@@ -73,4 +73,20 @@ class Account {
   final String userName;
 
   Account({required this.userID, required this.email, required this.userName});
+
+  factory Account.fromJson(Map<String, dynamic> json) {
+    return Account(
+      userID: json['userID'],
+      email: json['email'],
+      userName: json['userName'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userID': userID,
+      'email': email,
+      'userName': userName,
+    };
+  }
 }

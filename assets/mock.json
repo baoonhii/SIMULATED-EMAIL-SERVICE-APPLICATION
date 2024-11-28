@@ -32,7 +32,88 @@
             "isStarred": false,
             "isRead": false,
             "isSpam": true
+        },
+        {
+            "mailID": "4",
+            "senderAddress": "EveGreen@gotmail.com",
+            "receiverAddress": "FrankWhite@gotmail.com",
+            "contentSubject": "Weekly Report",
+            "contentBody": "Attached is the weekly report for your review.",
+            "timeSent": "2023-10-08T14:20:00Z",
+            "isStarred": false,
+            "isRead": true,
+            "isSpam": false
+        },
+        {
+            "mailID": "5",
+            "senderAddress": "GraceBlue@gotmail.com",
+            "receiverAddress": "HenryBlack@gotmail.com",
+            "contentSubject": "Birthday Party Invitation",
+            "contentBody": "You are invited to my birthday party this Saturday!",
+            "timeSent": "2023-10-09T11:15:00Z",
+            "isStarred": true,
+            "isRead": false,
+            "isSpam": false
+        },
+        {
+            "mailID": "6",
+            "senderAddress": "JohnDoe@gotmail.com",
+            "receiverAddress": "MichaelJordan@gotmail.com",
+            "contentSubject": "Lunch Meeting",
+            "contentBody": "Let's meet for lunch tomorrow at 1 PM.",
+            "timeSent": "2023-10-10T09:30:00Z",
+            "isStarred": false,
+            "isRead": false,
+            "isSpam": false
+        },
+        {
+            "mailID": "7",
+            "senderAddress": "JohnDoe@gotmail.com",
+            "receiverAddress": "LindaJohnson@gotmail.com",
+            "contentSubject": "Team Building Activity",
+            "contentBody": "We are organizing a team building activity next Friday. Please confirm your availability.",
+            "timeSent": "2023-10-11T13:45:00Z",
+            "isStarred": false,
+            "isRead": true,
+            "isSpam": false
+        },
+        {
+            "mailID": "8",
+            "senderAddress": "JohnDoe@gotmail.com",
+            "receiverAddress": "RobertSmith@gotmail.com",
+            "contentSubject": "Quarterly Review",
+            "contentBody": "The quarterly review meeting is scheduled for next Monday. Please prepare your reports.",
+            "timeSent": "2023-10-12T10:00:00Z",
+            "isStarred": true,
+            "isRead": false,
+            "isSpam": false
         }
     ],
-    "nothing": "nothing"
+    "accounts": [
+        {
+            "userID": "1",
+            "email": "JohnDoe@gotmail.com",
+            "userName": "John Doe"
+        },
+        {
+            "userID": "2",
+            "email": "AliceSmith@gotmail.com",
+            "userName": "Alice Smith"
+        },
+        {
+            "userID": "3",
+            "email": "CharlieBrown@gotmail.com",
+            "userName": "Charlie Brown"
+        },
+        {
+            "userID": "4",
+            "email": "EveGreen@gotmail.com",
+            "userName": "Eve Green"
+        },
+        {
+            "userID": "5",
+            "email": "GraceBlue@gotmail.com",
+            "userName": "Grace Blue"
+        }
+    ]
 }

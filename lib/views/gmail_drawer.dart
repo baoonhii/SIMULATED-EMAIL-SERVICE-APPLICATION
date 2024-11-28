@@ -20,51 +20,26 @@ class GmailDrawer extends StatelessWidget {
     Color dividerColor = Theme.of(context).dividerColor;
     Color drawerTextColor = Theme.of(context).colorScheme.onSurface;
 
-    ListTile drawerItem({
-      required IconData icon,
-      required String titleKey,
-      required String route,
-    }) {
+    ListTile drawerItem(Object? arguments,
+        {required IconData icon,
+        required String titleKey,
+        required String route,
+        bool isReplacement = false}) {
       return buildDrawerItem(
-        icon,
-        titleKey,
-        route,
-        context,
-        drawerTextColor,
-        iconColor,
-      );
+          icon, titleKey, route, context, drawerTextColor, iconColor, arguments,
+          isReplacement: isReplacement);
     }
 
     Map<String, Map<String, dynamic>> drawerGroup_1 = {
-      "inbox": {
-        "icon": Icons.inbox,
-        "titleKey": AppLocalizations.of(context)!.inbox,
-        "route": '/inbox'
-      },
-      "promotions": {
-        "icon": Icons.local_offer,
-        "titleKey": AppLocalizations.of(context)!.promotions,
-        "route": '/promotions'
-      },
-      "social": {
-        "icon": Icons.people,
-        "titleKey": AppLocalizations.of(context)!.social,
-        "route": '/social'
-      },
       "drafts": {
         "icon": Icons.drafts,
         "titleKey": AppLocalizations.of(context)!.drafts,
-        "route": '/drafts'
+        "route": MailSubroutes.DRAFT.value
       },
       "sent": {
         "icon": Icons.send,
         "titleKey": AppLocalizations.of(context)!.sent,
-        "route": '/sent'
-      },
-      "updates": {
-        "icon": Icons.info,
-        "titleKey": AppLocalizations.of(context)!.updates,
-        "route": '/updates'
+        "route": MailSubroutes.SENT.value
       },
     };
 
@@ -72,17 +47,17 @@ class GmailDrawer extends StatelessWidget {
       "starred": {
         "icon": Icons.star,
         "titleKey": AppLocalizations.of(context)!.starred,
-        "route": '/starred'
+        "route": MailSubroutes.STARRED.value
       },
       "spam": {
         "icon": Icons.delete,
         "titleKey": AppLocalizations.of(context)!.spam,
-        "route": '/spam'
+        "route": MailSubroutes.SPAM.value
       },
       "allMail": {
         "icon": Icons.all_inbox,
         "titleKey": AppLocalizations.of(context)!.allMail,
-        "route": '/allMail'
+        "route": MailSubroutes.ALL.value
       },
     };
 
@@ -94,8 +69,14 @@ class GmailDrawer extends StatelessWidget {
           Divider(
             color: dividerColor,
           ),
+          drawerItem(currentAccount,
+              icon: Icons.inbox,
+              titleKey: AppLocalizations.of(context)!.inbox,
+              route: MailRoutes.INBOX.value,
+              isReplacement: true),
           ...drawerGroup_1.values.map((value) {
             return drawerItem(
+              null,
               icon: value["icon"],
               titleKey: value["titleKey"],
               route: value["route"],
@@ -106,6 +87,7 @@ class GmailDrawer extends StatelessWidget {
           ),
           ...drawerGroup_2.values.map((value) {
             return drawerItem(
+              null,
               icon: value["icon"],
               titleKey: value["titleKey"],
               route: value["route"],
@@ -113,9 +95,10 @@ class GmailDrawer extends StatelessWidget {
           }),
           Divider(color: dividerColor),
           drawerItem(
+            null,
             icon: Icons.settings,
             titleKey: AppLocalizations.of(context)!.settings,
-            route: 'settings/userSettings',
+            route: SettingsRoutes.USER.value,
           ),
         ],
       ),
@@ -146,7 +129,7 @@ class GmailDrawer extends StatelessWidget {
         IconButton(
           icon: Icon(Icons.edit, color: textColor),
           onPressed: () {
-            Navigator.pushNamed(context, 'auth/editProfile');
+            Navigator.pushNamed(context, SettingsRoutes.EDITPROFILE.value);
           },
         ),
       ],
