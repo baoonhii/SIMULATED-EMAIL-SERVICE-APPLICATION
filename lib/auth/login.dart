@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_email/data_classes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../state_management/account_provider.dart';
 import '../utils/validators.dart';
 
 class GmailLoginScreen extends StatefulWidget {
@@ -62,12 +64,14 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         );
 
         if (account != null) {
+          
           // Navigate to next screen or show success
           if (mounted) {
+            final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+            accountProvider.setCurrentAccount(account);
             Navigator.pushReplacementNamed(
               context,
               MailRoutes.INBOX.value,
-              arguments: account,
             );
           }
         } else {

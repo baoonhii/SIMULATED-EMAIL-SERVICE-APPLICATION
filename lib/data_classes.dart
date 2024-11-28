@@ -89,4 +89,30 @@ class Account {
       'userName': userName,
     };
   }
+
+  @override
+  String toString() {
+    return 'userID: $userID - email: $email by userName: $userName';
+  }
+}
+
+class NotificationData {
+  final String notifTitle;
+  final String notifSubtitle;
+
+  NotificationData({required this.notifTitle, required this.notifSubtitle});
+
+  factory NotificationData.fromJson(Map<String, dynamic> json) {
+    return NotificationData(
+      notifTitle: json['title'],
+      notifSubtitle: json['subtitle'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': notifTitle,
+      'subtitle': notifSubtitle,
+    };
+  }
 }

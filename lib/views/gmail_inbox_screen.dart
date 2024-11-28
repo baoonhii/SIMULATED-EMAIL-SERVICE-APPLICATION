@@ -3,14 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../constants.dart';
-import '../data_classes.dart';
 import '../other_widgets/email.dart';
 import '../state_management/email_provider.dart';
 import 'gmail_base_screen.dart';
 
 class GmailInboxScreen extends StatefulWidget {
-  final Account currentAccount;
-  const GmailInboxScreen({super.key, required this.currentAccount});
+  const GmailInboxScreen({super.key});
 
   @override
   State<GmailInboxScreen> createState() => _GmailInboxScreenState();
@@ -29,7 +27,6 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
   @override
   Widget build(BuildContext context) {
     return GmailBaseScreen(
-      currentAccount: widget.currentAccount,
       title: AppLocalizations.of(context)!.inbox,
       appBarWidget: TextField(
         decoration: InputDecoration(

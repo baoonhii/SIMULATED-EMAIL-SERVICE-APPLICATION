@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_email/views/gmail_base_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 
-class UserSettingsScreen extends StatelessWidget {
+import '../constants.dart';
+import '../state_management/account_provider.dart';
+
+class UserSettingsScreen extends StatefulWidget {
   const UserSettingsScreen({super.key});
 
+  @override
+  State<UserSettingsScreen> createState() => _UserSettingsScreenState();
+}
 
+class _UserSettingsScreenState extends State<UserSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cài đặt người dùng'),
-      ),
+    final accountProvider = Provider.of<AccountProvider>(context);
+    final currentAccount = accountProvider.currentAccount!;
+
+    return GmailBaseScreen(
+      title: AppLocalizations.of(context)!.userSettings,
       body: ListView(
         children: [
           Card(
             margin: const EdgeInsets.all(8),
             child: ListTile(
               leading: const Icon(Icons.account_circle, color: Colors.blue),
-              title: const Text('Chỉnh sửa hồ sơ'),
-              subtitle: const Text('Cập nhật tên và ảnh đại diện của bạn'),
+              title: Text(AppLocalizations.of(context)!.changeProfile),
+              subtitle: Text(AppLocalizations.of(context)!.updateNamePic),
               trailing: const Icon(Icons.edit),
               onTap: () {
-                Navigator.pushNamed(context, '/editProfile');
+                Navigator.pushNamed(context, SettingsRoutes.EDITPROFILE.value);
               },
             ),
           ),
@@ -28,40 +39,38 @@ class UserSettingsScreen extends StatelessWidget {
             margin: const EdgeInsets.all(8),
             child: ListTile(
               leading: const Icon(Icons.lock, color: Colors.blue),
-              title: const Text('Đổi mật khẩu'),
-              subtitle: const Text('Cập nhật mật khẩu của bạn'),
+              title: Text(AppLocalizations.of(context)!.changePassword),
               trailing: const Icon(Icons.lock_open),
               onTap: () {},
             ),
           ),
-          Card(
-            margin: const EdgeInsets.all(8),
-            child: ListTile(
-              leading: const Icon(Icons.notifications, color: Colors.blue),
-              title: const Text('Cài đặt thông báo'),
-              subtitle: const Text('Chỉnh sửa sở thích thông báo của bạn'),
-              trailing: const Icon(Icons.arrow_forward),
-              onTap: () {
-                Navigator.pushNamed(context, '/notificationSettings');
-              },
-            ),
-          ),
+          // Card(
+          //   margin: const EdgeInsets.all(8),
+          //   child: ListTile(
+          //     leading: const Icon(Icons.notifications, color: Colors.blue),
+          //     title: Text(AppLocalizations.of(context)!.notifSettings),
+          //     trailing: const Icon(Icons.arrow_forward),
+          //     onTap: () {
+          //       Navigator.pushNamed(context, SettingsRoutes.NOTIF.value);
+          //     },
+          //   ),
+          // ),
           Card(
             margin: const EdgeInsets.all(8),
             child: ListTile(
               leading: const Icon(Icons.reply, color: Colors.blue),
-              title: const Text('Trả lời tự động'),
-              subtitle: const Text('Cài đặt tin nhắn tự động khi bạn vắng mặt'),
+              title: Text(AppLocalizations.of(context)!.autoRepSetting),
+              subtitle: Text(AppLocalizations.of(context)!.autoRepDesc),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                Navigator.pushNamed(context, '/autoReplySettings');
+                Navigator.pushNamed(context, SettingsRoutes.AUTOREP.value);
               },
             ),
           ),
           Card(
             margin: const EdgeInsets.all(8),
             child: SwitchListTile(
-              title: const Text('Chế độ tối (Dark Mode)'),
+              title: Text(AppLocalizations.of(context)!.darkModeToggle),
               secondary: const Icon(Icons.brightness_6, color: Colors.blue),
               value: Theme.of(context).brightness == Brightness.dark,
               onChanged: (value) {
@@ -72,7 +81,7 @@ class UserSettingsScreen extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout'),
+            title: Text(AppLocalizations.of(context)!.logout),
             onTap: () {
               // Handle logout functionality here
             },

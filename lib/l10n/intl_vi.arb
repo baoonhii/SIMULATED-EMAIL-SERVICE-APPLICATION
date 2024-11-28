@@ -19,5 +19,20 @@
     "signin": "Đăng nhập",
     "language_EN": "Tiếng Anh",
     "language_VI": "Tiếng Việt",
-    "invalidAuth": "Sai địa chỉ hoặc mật khẩu"
+    "invalidAuth": "Sai địa chỉ hoặc mật khẩu",
+    "userSettings": "Cài đặt người dùng",
+    "changeProfile": "Chỉnh sửa hồ sơ",
+    "updateNamePic": "Cập nhật tên và ảnh đại diện của bạn",
+    "changePassword": "Đổi mật khẩu",
+    "notifSettings": "Thông báo",
+    "autoRepSetting": "Trả lời tự động",
+    "autoRepDesc": "Cài đặt tin nhắn tự động khi bạn vắng mặt",
+    "darkModeToggle": "Chế độ tối",
+    "logout": "Đăng xuất",
+    "profileSettingName": "Tên",
+    "saveSettingChanges": "Lưu thay đổi",
+    "notifications": "Thông báo",
+    "turnOnAutoRep": "Bật trả lời tự động",
+    "autoRepMessage": "Tin nhắn tự động",
+    "autoRepMessageHint": "Nhập tin nhắn tự động của bạn ở đây"
 }

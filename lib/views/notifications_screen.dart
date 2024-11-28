@@ -1,34 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 
-class NotificationsScreen extends StatelessWidget {
-  final List<Map<String, String>> notifications = [
-    {'title': 'New Email', 'subtitle': 'You have a new email from John Doe'},
-    {'title': 'Meeting Reminder', 'subtitle': 'Meeting with team at 3 PM'},
-    {
-      'title': 'Profile Update',
-      'subtitle': 'Don\'t forget to update your profile'
-    },
-    {'title': 'Auto-Reply Enabled', 'subtitle': 'Auto-reply is now active'},
-  ];
+import '../other_widgets/notif.dart';
+import '../state_management/notif_provider.dart';
+import 'gmail_base_screen.dart';
+
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch notifications when the screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NotifsProvider>(context, listen: false).fetchNotifs();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Thông báo'),
-      ),
-      body: ListView.builder(
-        itemCount: notifications.length,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: ListTile(
-              leading: Icon(Icons.notifications, color: Colors.blue),
-              title: Text(notifications[index]['title']!),
-              subtitle: Text(notifications[index]['subtitle']!),
-              trailing: Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {},
-            ),
+    return GmailBaseScreen(
+      title: AppLocalizations.of(context)!.notifications,
+      body: Consumer<NotifsProvider>(
+        builder: (context, notifsProvider, child) {
+          if (notifsProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (notifsProvider.hasError) {
+            return Center(child: Text(notifsProvider.errorMessage));
+          }
+
+          return ListView.builder(
+            itemCount: notifsProvider.notifs.length,
+            itemBuilder: (context, index) {
+              final notif = notifsProvider.notifs[index];
+              return getNotifTile(
+                notif,
+                () {},
+                context,
+              );
+            },
           );
         },
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../data_classes.dart';
 import '../other_widgets/locale_switcher.dart';
 import 'gmail_drawer.dart';
 import '../state_management/locale_provider.dart';
@@ -10,7 +9,6 @@ class GmailBaseScreen extends StatefulWidget {
   final Widget body;
   final Widget? appBarWidget;
   final FloatingActionButton? floatingActionButton;
-  final Account currentAccount;
 
   const GmailBaseScreen({
     super.key,
@@ -18,7 +16,6 @@ class GmailBaseScreen extends StatefulWidget {
     required this.body,
     this.appBarWidget,
     this.floatingActionButton,
-    required this.currentAccount,
   });
 
   @override
@@ -47,7 +44,7 @@ class _GmailBaseScreenState extends State<GmailBaseScreen> {
           _focusNode,
         ),
       ),
-      drawer: GmailDrawer(currentAccount: widget.currentAccount),
+      drawer: const GmailDrawer(),
       body: GestureDetector(
         onTap: () {
           // Unfocus the dropdown when the body is tapped

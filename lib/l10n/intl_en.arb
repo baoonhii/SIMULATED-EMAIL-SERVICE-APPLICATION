@@ -19,5 +19,20 @@
     "signin": "Sign in",
     "language_EN": "English",
     "language_VI": "Vietnamese",
-    "invalidAuth": "Invalid email or password"
+    "invalidAuth": "Invalid email or password",
+    "userSettings": "User settings",
+    "changeProfile": "Change profile info",
+    "updateNamePic": "Update user name and profile picture",
+    "changePassword": "Change password",
+    "notifSettings": "Notification",
+    "autoRepSetting": "Auto-reply",
+    "autoRepDesc": "Set an automatic reply when you're away",
+    "darkModeToggle": "Dark mode",
+    "logout": "Logout",
+    "profileSettingName": "Name",
+    "saveSettingChanges": "Save changes",
+    "notifications": "Notifications",
+    "turnOnAutoRep": "Turn on Auto-reply",
+    "autoRepMessage": "Auto-reply",
+    "autoRepMessageHint": "Enter a message that will be sent automatically"
 }

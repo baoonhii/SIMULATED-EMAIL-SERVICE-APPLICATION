@@ -3,8 +3,7 @@ const Route404 = "404";
 enum SettingsRoutes {
   ROOT("settings/"),
   USER("settings/userSettings"),
-  NOTIF("settings/notifications"),
-  AUTOREF("settings/autoReply"),
+  AUTOREP("settings/autoReply"),
   EDITPROFILE("settings/editProfile");
 
   const SettingsRoutes(this.value);
@@ -14,8 +13,8 @@ enum SettingsRoutes {
 enum AuthRoutes {
   ROOT("/"),
   LOGIN("/"),
+  AUTHROOT("auth/"),
   REGISTER("auth/register");
-  
 
   const AuthRoutes(this.value);
   final String value;
@@ -24,7 +23,8 @@ enum AuthRoutes {
 enum MailRoutes {
   INBOX("/inbox"),
   EMAIL_DETAIL("/emailDetail"),
-  COMPOSE("/compose");
+  COMPOSE("/compose"),
+  NOTIF("/notif");
 
   const MailRoutes(this.value);
   final String value;

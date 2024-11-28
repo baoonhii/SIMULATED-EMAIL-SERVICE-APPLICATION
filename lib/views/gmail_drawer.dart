@@ -1,33 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../data_classes.dart';
 import '../other_widgets/drawer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class GmailDrawer extends StatelessWidget {
-  final Account currentAccount;
+import '../state_management/account_provider.dart';
 
+class GmailDrawer extends StatelessWidget {
   const GmailDrawer({
     super.key,
-    required this.currentAccount,
   });
 
   @override
   Widget build(BuildContext context) {
+    final accountProvider = Provider.of<AccountProvider>(context);
+    final currentAccount = accountProvider.currentAccount!;
+
     Color textColor = Theme.of(context).colorScheme.onPrimary;
     Color iconColor = Theme.of(context).iconTheme.color!;
     Color drawerHeaderColor = Theme.of(context).colorScheme.primary;
     Color dividerColor = Theme.of(context).dividerColor;
     Color drawerTextColor = Theme.of(context).colorScheme.onSurface;
 
-    ListTile drawerItem(Object? arguments,
-        {required IconData icon,
-        required String titleKey,
-        required String route,
-        bool isReplacement = false}) {
+    ListTile drawerItem(
+      Object? arguments, {
+      required IconData icon,
+      required String titleKey,
+      required String route,
+      bool isReplacement = false,
+    }) {
       return buildDrawerItem(
-          icon, titleKey, route, context, drawerTextColor, iconColor, arguments,
-          isReplacement: isReplacement);
+        icon,
+        titleKey,
+        route,
+        context,
+        drawerTextColor,
+        iconColor,
+        arguments,
+        isReplacement: isReplacement,
+      );
     }
 
     Map<String, Map<String, dynamic>> drawerGroup_1 = {
@@ -65,15 +77,22 @@ class GmailDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          getDrawerHeader(drawerHeaderColor, textColor, context),
+          getDrawerHeader(
+            drawerHeaderColor,
+            textColor,
+            context,
+            currentAccount,
+          ),
           Divider(
             color: dividerColor,
           ),
-          drawerItem(currentAccount,
-              icon: Icons.inbox,
-              titleKey: AppLocalizations.of(context)!.inbox,
-              route: MailRoutes.INBOX.value,
-              isReplacement: true),
+          drawerItem(
+            currentAccount,
+            icon: Icons.inbox,
+            titleKey: AppLocalizations.of(context)!.inbox,
+            route: MailRoutes.INBOX.value,
+            isReplacement: true,
+          ),
           ...drawerGroup_1.values.map((value) {
             return drawerItem(
               null,
@@ -95,7 +114,7 @@ class GmailDrawer extends StatelessWidget {
           }),
           Divider(color: dividerColor),
           drawerItem(
-            null,
+            currentAccount,
             icon: Icons.settings,
             titleKey: AppLocalizations.of(context)!.settings,
             route: SettingsRoutes.USER.value,
@@ -104,35 +123,39 @@ class GmailDrawer extends StatelessWidget {
       ),
     );
   }
+}
 
-  UserAccountsDrawerHeader getDrawerHeader(
-    Color drawerHeaderColor,
-    Color textColor,
-    BuildContext context,
-  ) {
-    return UserAccountsDrawerHeader(
-      decoration: BoxDecoration(
-        color: drawerHeaderColor,
+UserAccountsDrawerHeader getDrawerHeader(
+  Color drawerHeaderColor,
+  Color textColor,
+  BuildContext context,
+  Account currentAccount,
+) {
+  return UserAccountsDrawerHeader(
+    decoration: BoxDecoration(
+      color: drawerHeaderColor,
+    ),
+    accountName: Text(
+      currentAccount.userName,
+      style: TextStyle(color: textColor),
+    ),
+    accountEmail: Text(
+      currentAccount.email,
+      style: TextStyle(color: textColor.withOpacity(0.7)),
+    ),
+    currentAccountPicture: const CircleAvatar(
+      backgroundImage: NetworkImage(placeholderImage),
+    ),
+    otherAccountsPictures: [
+      IconButton(
+        icon: Icon(Icons.edit, color: textColor),
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            SettingsRoutes.EDITPROFILE.value,
+          );
+        },
       ),
-      accountName: Text(
-        currentAccount.userName,
-        style: TextStyle(color: textColor),
-      ),
-      accountEmail: Text(
-        currentAccount.email,
-        style: TextStyle(color: textColor.withOpacity(0.7)),
-      ),
-      currentAccountPicture: const CircleAvatar(
-        backgroundImage: NetworkImage(placeholderImage),
-      ),
-      otherAccountsPictures: [
-        IconButton(
-          icon: Icon(Icons.edit, color: textColor),
-          onPressed: () {
-            Navigator.pushNamed(context, SettingsRoutes.EDITPROFILE.value);
-          },
-        ),
-      ],
-    );
-  }
+    ],
+  );
 }

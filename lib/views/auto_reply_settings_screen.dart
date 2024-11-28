@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'gmail_base_screen.dart';
 
 class AutoReplySettingsScreen extends StatefulWidget {
+  const AutoReplySettingsScreen({super.key});
+
   @override
-  _AutoReplySettingsScreenState createState() =>
+  State<AutoReplySettingsScreen> createState() =>
       _AutoReplySettingsScreenState();
 }
 
@@ -13,45 +17,43 @@ class _AutoReplySettingsScreenState extends State<AutoReplySettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Cài đặt trả lời tự động'),
-      ),
+    return GmailBaseScreen(
+      title: AppLocalizations.of(context)!.autoRepSetting,
       body: ListView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         children: [
           SwitchListTile(
-            title: Text('Bật trả lời tự động'),
+            title: Text(AppLocalizations.of(context)!.turnOnAutoRep),
             value: autoReplyEnabled,
             onChanged: (value) {
               setState(() {
                 autoReplyEnabled = value;
               });
             },
-            secondary: Icon(Icons.reply, color: Colors.blue),
+            secondary: const Icon(Icons.reply, color: Colors.blue),
           ),
           if (autoReplyEnabled)
             Card(
-              margin: EdgeInsets.symmetric(vertical: 16),
+              margin: const EdgeInsets.symmetric(vertical: 16),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
                   controller: _autoReplyMessageController,
                   maxLines: 3,
                   decoration: InputDecoration(
-                    labelText: 'Tin nhắn tự động',
-                    hintText: 'Nhập tin nhắn tự động của bạn ở đây...',
-                    border: OutlineInputBorder(),
+                    labelText: AppLocalizations.of(context)!.autoRepMessage,
+                    hintText: AppLocalizations.of(context)!.autoRepMessageHint,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
             ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('Lưu cài đặt'),
+            child: Text(AppLocalizations.of(context)!.saveSettingChanges),
           ),
         ],
       ),

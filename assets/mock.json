@@ -115,5 +115,23 @@
             "email": "GraceBlue@gotmail.com",
             "userName": "Grace Blue"
         }
+    ],
+    "notifications": [
+        {
+            "title": "New Email",
+            "subtitle": "You have a new email from John Doe"
+        },
+        {
+            "title": "Meeting Reminder",
+            "subtitle": "Meeting with team at 3 PM"
+        },
+        {
+            "title": "Profile Update",
+            "subtitle": "Don't forget to update your profile"
+        },
+        {
+            "title": "Auto-Reply Enabled",
+            "subtitle": "Auto-reply is now active"
+        }
     ]
 }

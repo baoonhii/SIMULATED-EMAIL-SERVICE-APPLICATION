@@ -16,17 +16,18 @@ PageRouteBuilder getRouterManager(
 ) {
   print(settings.name);
   if (settings.name != null) {
-    // Check if the route starts with a specific prefix and use the appropriate manager
     if (settings.name!.startsWith(AuthRoutes.ROOT.value)) {
-      return MainManager.redirector(context, settings.name!, arguments: settings.arguments);
+      return MainManager.redirector(
+        context,
+        settings.name!,
+        arguments: settings.arguments,
+      );
     } else if (settings.name!.startsWith(SettingsRoutes.ROOT.value)) {
       return SettingManager.redirector(context, settings.name!);
-    } else if (settings.name!.startsWith('auth/')) {
+    } else if (settings.name!.startsWith(AuthRoutes.AUTHROOT.value)) {
       return LoginManager.redirector(context, settings.name!);
     }
   }
-
-  // Fallback to the default 404 screen
   return MainManager.redirector(context, Route404);
 }
 
@@ -44,15 +45,21 @@ class Screen404 extends StatelessWidget {
   }
 }
 
-abstract class RouterManager {
-}
+abstract class RouterManager {}
 
 class MainManager extends RouterManager {
-  static PageRouteBuilder redirector(BuildContext context, String path, {Object? arguments}) {
+  static PageRouteBuilder redirector(
+    BuildContext context,
+    String path, {
+    Object? arguments,
+  }) {
     final Map<String, WidgetBuilder> routeMap = {
       AuthRoutes.LOGIN.value: (context) => const GmailLoginScreen(),
-      MailRoutes.INBOX.value: (context) => GmailInboxScreen(currentAccount: arguments as Account),
-      MailRoutes.EMAIL_DETAIL.value: (context) => GmailEmailDetailScreen(email: arguments as Email),
+      MailRoutes.INBOX.value: (context) => const GmailInboxScreen(),
+      MailRoutes.EMAIL_DETAIL.value: (context) => GmailEmailDetailScreen(
+            email: arguments as Email,
+          ),
+      MailRoutes.NOTIF.value: (context) => const NotificationsScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
@@ -63,11 +70,14 @@ class MainManager extends RouterManager {
 class SettingManager extends RouterManager {
   static const root = "settings/";
 
-  static PageRouteBuilder redirector(BuildContext context, String path, {Object? arguments}) {
+  static PageRouteBuilder redirector(
+    BuildContext context,
+    String path, {
+    Object? arguments,
+  }) {
     final Map<String, WidgetBuilder> routeMap = {
       SettingsRoutes.USER.value: (context) => const UserSettingsScreen(),
-      SettingsRoutes.NOTIF.value: (context) => NotificationsScreen(),
-      SettingsRoutes.AUTOREF.value: (context) => AutoReplySettingsScreen(),
+      SettingsRoutes.AUTOREP.value: (context) => const AutoReplySettingsScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
@@ -76,7 +86,11 @@ class SettingManager extends RouterManager {
 }
 
 class LoginManager extends RouterManager {
-  static PageRouteBuilder redirector(BuildContext context, String path, {Object? arguments}) {
+  static PageRouteBuilder redirector(
+    BuildContext context,
+    String path, {
+    Object? arguments,
+  }) {
     final Map<String, WidgetBuilder> routeMap = {
       AuthRoutes.REGISTER.value: (context) => GmailRegisterScreen(),
     };

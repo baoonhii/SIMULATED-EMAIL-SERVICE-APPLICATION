@@ -1,46 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class EditProfileScreen extends StatelessWidget {
+import '../constants.dart';
+import '../data_classes.dart';
+
+class EditProfileScreen extends StatefulWidget {
+  final Account currentAccount;
+  const EditProfileScreen({super.key, required this.currentAccount});
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
+
   final TextEditingController _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: Text(AppLocalizations.of(context)!.createAccount),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+              backgroundImage: NetworkImage(placeholderImage),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+                labelText: AppLocalizations.of(context)!.profileSettingName,
+                border: const OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Save Changes'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: Text(AppLocalizations.of(context)!.saveSettingChanges),
             ),
           ],
         ),
