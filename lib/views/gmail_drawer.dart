@@ -1,11 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../constants.dart';
 import '../data_classes.dart';
 import '../other_widgets/drawer.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import '../other_widgets/general.dart';
 import '../state_management/account_provider.dart';
 
 class GmailDrawer extends StatelessWidget {
@@ -145,11 +145,7 @@ UserAccountsDrawerHeader getDrawerHeader(
       style: TextStyle(color: textColor.withOpacity(0.7)),
     ),
     currentAccountPicture: CircleAvatar(
-      backgroundImage: CachedNetworkImageProvider(
-        getUserProfileImageURL(
-          currentAccount.profile_picture,
-        ),
-      ),
+      backgroundImage: getImageFromAccount(currentAccount),
     ),
     otherAccountsPictures: [
       IconButton(

@@ -2,13 +2,11 @@ from rest_framework import serializers
 from .models import User, UserProfile, Email, Attachment, Label, UserSettings
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.exceptions import ValidationError
-from django.conf import settings  # For accessing media URL
 from django.core.validators import FileExtensionValidator
-import magic  # for mime type detection
+import magic
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
-from django.utils import timezone
 
 
 class UserSerializer(serializers.ModelSerializer):

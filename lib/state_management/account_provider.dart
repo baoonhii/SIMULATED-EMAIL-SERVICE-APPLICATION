@@ -4,11 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import '../constants.dart';
 import '../data_classes.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:uuid/uuid.dart';
+
+import '../utils/api_pipeline.dart';
 
 class AccountProvider extends ChangeNotifier {
   Account? _currentAccount;
@@ -34,33 +32,13 @@ class AccountProvider extends ChangeNotifier {
   }
 
   Future<void> fetchUserProfile() async {
-    final url = Uri.parse(API_Endpoints.USER_PROFILE.value);
+    final responseData = await fetchData(
+      url: Uri.parse(API_Endpoints.USER_PROFILE.value),
+      method: 'GET',
+    );
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedToken = prefs.getString('session_token');
-      print('Stored token: $storedToken');
-
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': storedToken!,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        print(responseData);
-        final userProfile = UserProfile.fromJson(responseData);
-        setUserProfile(userProfile);
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['detail'] ?? 'Failed to fetch profile');
-      }
-    } catch (e) {
-      print('Error fetching user profile: $e');
-      rethrow; // Re-throw the error so the UI can handle it
-    }
+    final userProfile = UserProfile.fromJson(responseData);
+    setUserProfile(userProfile);
   }
 
   // Method to clear the current account (e.g., on logout)
@@ -86,145 +64,86 @@ class AccountProvider extends ChangeNotifier {
 
     if (storedToken == null) return false;
 
-    // Optional: Add an API call to validate the token on the backend
     try {
-      final url = Uri.parse(API_Endpoints.AUTH_VALIDATE_TOKEN.value);
-      final response = await http.post(
-        url,
-        body: json.encode({'session_token': storedToken}),
-        headers: {'Content-Type': 'application/json'},
+      final responseData = await fetchData(
+        url: Uri.parse(API_Endpoints.AUTH_VALIDATE_TOKEN.value),
+        method: 'POST',
+        requiresAuth: false,
+        body: {'session_token': storedToken},
       );
 
-      if (response.statusCode == 200) {
-        // Token is valid, load the user data
-        final responseData = json.decode(response.body);
-        final user = Account.fromJson(responseData['user']);
-        setCurrentAccount(user);
-        _sessionToken = storedToken;
-        return true;
-      }
-      return false;
+      final user = Account.fromJson(responseData['user']);
+      setCurrentAccount(user);
+      _sessionToken = storedToken;
+      return true;
     } catch (e) {
-      print('Error validating session: $e');
       return false;
     }
   }
 
   Future<void> login(
-      String phoneNumber, String password, VoidCallback onSuccess) async {
-    final url = Uri.parse(API_Endpoints.AUTH_LOGIN.value);
-    final body = json.encode({
-      'phone_number': phoneNumber,
-      'password': password,
-    });
-    print(body);
+    String phoneNumber,
+    String password,
+    VoidCallback onSuccess,
+  ) async {
+    final responseData = await fetchData(
+      url: Uri.parse(API_Endpoints.AUTH_LOGIN.value),
+      method: 'POST',
+      requiresAuth: false,
+      body: {
+        'phone_number': phoneNumber,
+        'password': password,
+      },
+    );
 
-    try {
-      final response = await http.post(
-        url,
-        body: body,
-        headers: {'Content-Type': 'application/json'},
-      );
+    final user = Account.fromJson(responseData['user']);
+    final sessionToken = responseData['session_token'];
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        print(responseData);
-        final user = Account.fromJson(responseData['user']);
-        final sessionToken = responseData['session_token'];
+    // Store session token
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('session_token', sessionToken);
 
-        // Store session token
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('session_token', sessionToken);
+    setCurrentAccount(user);
+    _sessionToken = sessionToken;
 
-        setCurrentAccount(user);
-        _sessionToken = sessionToken;
-
-        // Call the success callback
-        onSuccess();
-      } else {
-        final errorData = json.decode(response.body);
-        print('Login failed: $errorData');
-        throw Exception(errorData);
-      }
-    } catch (e) {
-      print('Error during login: $e');
-      rethrow;
-    }
+    onSuccess();
   }
 
   Future<void> logout() async {
-    final url = Uri.parse(API_Endpoints.AUTH_LOGOUT.value);
-
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedToken = prefs.getString('session_token');
-
-      if (storedToken != null) {
-        final response = await http.post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': storedToken,
-          },
-        );
-
-        // Always clear the account, regardless of logout request success
-        clearCurrentAccount();
-
-        if (response.statusCode != 200) {
-          print(
-            'Logout request failed with status code: ${response.statusCode}',
-          );
-        }
-      } else {
-        // If no stored token, just clear the account
-        clearCurrentAccount();
-      }
+      await fetchData(
+        url: Uri.parse(API_Endpoints.AUTH_LOGOUT.value),
+        method: 'POST',
+      );
     } catch (e) {
-      print('Error during logout: $e');
-      // Ensure account is cleared even if there's a network error
+      print('Logout request failed: $e');
+    } finally {
       clearCurrentAccount();
     }
   }
 
-  // Method to register
-  Future<void> register(
-    String firstName,
-    String lastName,
-    String email,
-    String phoneNumber,
-    String password,
-    String password2,
-  ) async {
-    final url = Uri.parse(API_Endpoints.AUTH_REGISTER.value);
-
-    try {
-      final response = await http.post(
-        url,
-        body: json.encode({
-          'username': phoneNumber,
-          'first_name': firstName,
-          'last_name': lastName,
-          'email': email,
-          'phone_number': phoneNumber,
-          'password': password,
-          'password2': password2,
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 201) {
-        final responseData = json.decode(response.body);
-        print('Registration successful: $responseData');
-      } else {
-        final errorData = json.decode(response.body);
-        print('Registration failed: $errorData');
-        throw Exception(errorData);
-      }
-    } catch (e) {
-      print('Error during registration: $e');
-      rethrow;
-    }
+  Future<void> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+    required String password2,
+  }) async {
+    await fetchData(
+      url: Uri.parse(API_Endpoints.AUTH_REGISTER.value),
+      method: 'POST',
+      requiresAuth: false,
+      body: {
+        'username': phoneNumber,
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone_number': phoneNumber,
+        'password': password,
+        'password2': password2,
+      },
+    );
   }
 
   Future<void> updateProfile({
@@ -232,77 +151,43 @@ class AccountProvider extends ChangeNotifier {
     required String lastName,
     required String email,
     String? bio,
-    DateTime? birthdate, // Add birthdate parameter
-    File? profilePicture, // For mobile/desktop
-    Uint8List? profilePictureBytes, // For web
+    DateTime? birthdate,
+    File? profilePicture,
+    Uint8List? profilePictureBytes,
   }) async {
-    final url = Uri.parse(API_Endpoints.USER_PROFILE.value);
-    const uuid = Uuid();
+    // Prepare fields
+    final fields = {
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      if (bio != null) 'bio': bio,
+      if (birthdate != null)
+        'birthdate': DateFormat('yyyy-MM-dd').format(birthdate),
+    };
 
-    try {
-      var request = http.MultipartRequest('PUT', url);
+    // Perform file upload or regular update
+    final responseData =
+        await (profilePicture != null || profilePictureBytes != null
+            ? uploadImage(
+                url: Uri.parse(API_Endpoints.USER_PROFILE.value),
+                fields: fields,
+                fileToUpload: profilePicture,
+                fileBytes: profilePictureBytes,
+                fileFieldName: 'profile_picture',
+              )
+            : fetchData(
+                url: Uri.parse(API_Endpoints.USER_PROFILE.value),
+                method: 'PUT',
+                body: fields,
+              ));
 
-      // Add session token to headers
-      final prefs = await SharedPreferences.getInstance();
-      final storedToken = prefs.getString('session_token');
-      request.headers['Authorization'] = storedToken!;
+    // Update account and profile
+    final updatedUser = Account.fromJson(responseData['user']);
+    final updatedProfile = UserProfile.fromJson(
+      responseData['user_profile'] ?? responseData,
+    );
 
-      // Add text fields
-      request.fields['first_name'] = firstName;
-      request.fields['last_name'] = lastName;
-      request.fields['email'] = email;
-
-      if (bio != null) {
-        request.fields['bio'] = bio;
-      }
-
-      // Add birthdate if provided
-      if (birthdate != null) {
-        request.fields['birthdate'] =
-            DateFormat('yyyy-MM-dd').format(birthdate);
-      }
-
-      // Handle profile picture
-      if (profilePicture != null) {
-        // For mobile/desktop
-        request.files.add(await http.MultipartFile.fromPath(
-          'profile_picture',
-          profilePicture.path,
-          filename: '${uuid.v4()}.jpg', // Random file name
-        ));
-      } else if (profilePictureBytes != null) {
-        // For web
-        request.files.add(http.MultipartFile.fromBytes(
-          'profile_picture',
-          profilePictureBytes,
-          filename: '${uuid.v4()}.jpg', // Random file name
-          contentType: MediaType('image', 'jpeg'),
-        ));
-      }
-
-      // Send the request
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-
-        // Update both the account and user profile data
-        final updatedUser = Account.fromJson(responseData['user']);
-        final updatedProfile = UserProfile.fromJson(
-          responseData['user_profile'] ?? responseData,
-        );
-        // Handle cases where the API may return the profile directly under "user" or as "user_profile".
-
-        setCurrentAccount(updatedUser);
-        setUserProfile(updatedProfile); // Update the user profile
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['detail'] ?? 'Failed to update profile');
-      }
-    } catch (e) {
-      print('Error updating profile: $e');
-      rethrow;
-    }
+    setCurrentAccount(updatedUser);
+    setUserProfile(updatedProfile);
   }
 }

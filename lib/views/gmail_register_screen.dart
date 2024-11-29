@@ -56,22 +56,19 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
                 ElevatedButton(
                   onPressed: () {
                     final firstName = _nameController.text;
-                    final lastName =
-                        _surnameController.text; // Add surname TextField
+                    final lastName = _surnameController.text;
                     final email = _emailController.text;
-                    final phoneNumber = _phoneController
-                        .text; // Make sure you have a phone number field
+                    final phoneNumber = _phoneController.text;
                     final password = _passwordController.text;
-                    final password2 = _confirmPasswordController
-                        .text; // Add confirm password field
+                    final password2 = _confirmPasswordController.text;
                     Provider.of<AccountProvider>(context, listen: false)
                         .register(
-                      firstName,
-                      lastName,
-                      email,
-                      phoneNumber,
-                      password,
-                      password2,
+                      firstName: firstName,
+                      lastName: lastName,
+                      email: email,
+                      phoneNumber: phoneNumber,
+                      password: password,
+                      password2: password2,
                     );
 
                     if (Provider.of<AccountProvider>(

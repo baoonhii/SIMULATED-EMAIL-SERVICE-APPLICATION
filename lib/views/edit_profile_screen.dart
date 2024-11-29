@@ -5,10 +5,11 @@ import 'package:flutter_email/data_classes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../constants.dart';
+import 'package:file_picker/file_picker.dart';
+import '../other_widgets/general.dart';
+import '../other_widgets/profile_edit.dart';
 import '../state_management/account_provider.dart';
 import 'gmail_base_screen.dart';
-import 'package:file_picker/file_picker.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -32,8 +33,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final accountProvider =
-        Provider.of<AccountProvider>(context, listen: false);
+    final accountProvider = Provider.of<AccountProvider>(
+      context,
+      listen: false,
+    );
     final currentAccount = accountProvider.currentAccount!;
 
     accountProvider.fetchUserProfile().then((value) {
@@ -51,9 +54,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }).catchError((error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching profile: $error')),
-        );
+        showSnackBar(context, 'Error fetching profile: $error');
       }
     });
 
@@ -105,7 +106,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         lastName: _lastnameController.text,
         email: _emailController.text,
         bio: _bioController.text,
-        birthdate: _selectedBirthdate, // Add birthdate to the update method
+        birthdate: _selectedBirthdate,
         // Use `File` for mobile/desktop
         profilePicture: kIsWeb ? null : _imageFile,
         // Use `Uint8List` for web
@@ -113,17 +114,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdated)),
-        );
-
+        showSnackBar(context, AppLocalizations.of(context)!.profileUpdated);
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating profile: $e')),
-        );
+        showSnackBar(context, 'Error updating profile: $e');
       }
     }
   }
@@ -177,6 +173,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   MouseRegion getProfileImagePicker(Account currentAccount) {
+    var backgroundImage = _imageBytes != null
+        ? MemoryImage(_imageBytes!) // For web
+        : _imageFile != null
+            ? FileImage(_imageFile!) // For mobile/desktop
+            : getImageFromAccount(currentAccount);
     return MouseRegion(
       onEnter: (event) => setState(() => _isHovering = true),
       onExit: (event) => setState(() => _isHovering = false),
@@ -187,26 +188,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             children: [
               CircleAvatar(
                 radius: 60,
-                backgroundImage: _imageBytes != null
-                    ? MemoryImage(_imageBytes!) // For web
-                    : _imageFile != null
-                        ? FileImage(_imageFile!) // For mobile/desktop
-                        : NetworkImage(
-                            getUserProfileImageURL(
-                              currentAccount.profile_picture,
-                            ),
-                          ) as ImageProvider,
+                backgroundImage: backgroundImage,
               ),
-              if (_isHovering)
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              if (_isHovering) const ImagePickerOverlay(),
             ],
           ),
         ),
@@ -215,43 +199,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   TextField getFirstNameField(BuildContext context) {
-    return TextField(
-      controller: _firstnameController,
-      decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.firstName,
-        border: const OutlineInputBorder(),
-      ),
+    return getTextField(
+      _firstnameController,
+      AppLocalizations.of(context)!.firstName,
     );
   }
 
   TextField getLastNameField(BuildContext context) {
-    return TextField(
-      controller: _lastnameController,
-      decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.lastName,
-        border: const OutlineInputBorder(),
-      ),
+    return getTextField(
+      _lastnameController,
+      AppLocalizations.of(context)!.lastName,
     );
   }
 
   TextField getEmailField() {
-    return TextField(
-      controller: _emailController,
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        border: OutlineInputBorder(),
-      ),
-    );
+    return getTextField(_emailController, 'Email');
   }
 
   TextField getBioField(BuildContext context) {
-    return TextField(
-      controller: _bioController,
+    return getTextField(
+      _bioController,
+      AppLocalizations.of(context)!.bio,
       maxLines: 3,
-      decoration: InputDecoration(
-        labelText: AppLocalizations.of(context)!.bio,
-        border: const OutlineInputBorder(),
-      ),
     );
   }
 
