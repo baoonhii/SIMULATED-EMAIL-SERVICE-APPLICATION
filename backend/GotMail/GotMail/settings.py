@@ -152,6 +152,10 @@ LOGOUT_URL = 'logout'
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
+MEDIA_ROOT = 'user_res'
+
+MEDIA_URL = '/user_res/'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',

@@ -1,6 +1,8 @@
 // ignore_for_file: camel_case_types
 
 const Route404 = "404";
+const placeholderImage = 'assets/placeholder.jpg';
+const appName = "GotMail";
 
 enum SettingsRoutes {
   ROOT("settings/"),
@@ -43,16 +45,20 @@ enum MailSubroutes {
   final String value;
 }
 
-const placeholderImage = 'assets/placeholder.jpg';
-const appName = "GotMail";
-
 enum API_Endpoints {
   AUTH_REGISTER('http://127.0.0.1:8000/auth/register/'),
   AUTH_LOGIN('http://127.0.0.1:8000/auth/login/'),
   AUTH_LOGOUT('http://127.0.0.1:8000/auth/logout/'),
   AUTH_VALIDATE_TOKEN('http://127.0.0.1:8000/auth/validate_token/'),
+  GET_IMAGE("http://127.0.0.1:8000"),
   ;
 
   const API_Endpoints(this.value);
   final String value;
+}
+
+String getUserProfileImageURL(String url) {
+  final finalUrl = "${API_Endpoints.GET_IMAGE.value}$url";
+  print(finalUrl);
+  return finalUrl;
 }

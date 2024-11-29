@@ -195,3 +195,4 @@ Endpoint: <http://127.0.0.1:8000/email/send/>
     "labels": [],
     "is_reply": false
 }
+```

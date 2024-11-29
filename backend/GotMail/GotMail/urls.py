@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
-
+from django.conf.urls.static import static
+from GotMail import settings
 from gotmail_service.views import LogoutView, RegisterView, LoginView, UserProfileView, SendEmailView, ValidateTokenView
 
 urlpatterns = [
@@ -30,4 +31,4 @@ urlpatterns = [
     path('auth/validate_token/', ValidateTokenView.as_view(), name="validate_token"),
     path('auth/profile/', UserProfileView.as_view(), name="api_profile"),
     path('email/send/', SendEmailView.as_view(), name="api_send_mail"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -79,7 +79,7 @@ class SettingManager extends RouterManager {
     final Map<String, WidgetBuilder> routeMap = {
       SettingsRoutes.USER.value: (context) => const UserSettingsScreen(),
       SettingsRoutes.AUTOREP.value: (context) => const AutoReplySettingsScreen(),
-      SettingsRoutes.EDITPROFILE.value: (context) => const EditProfileScreen(),
+      SettingsRoutes.EDITPROFILE.value: (context) => EditProfileScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
