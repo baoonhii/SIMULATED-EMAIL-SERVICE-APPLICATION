@@ -38,10 +38,19 @@
     "autoRepMessageHint": "Nhập tin nhắn tự động của bạn ở đây",
     "hello": "Xin chào",
     "continueNext": "Tiếp tục",
-    "editProfile": "Thay đổi thông tin cá nhân", 
+    "editProfile": "Thay đổi thông tin cá nhân",
     "firstName": "Tên",
     "lastName": "Họ",
     "bio": "Tiểu sử",
     "profileUpdated": "Cập nhật thông tin thành công",
-    "birthdate": "Ngày sinh"
+    "birthdate": "Ngày sinh",
+    "autoReplyMessageRequired": "Cần thêm thông điệp tự động",
+    "autoReplyFromEmail": "Từ email",
+    "autoReplyFromEmailHint": "Địa chỉ email tin tự động gửi từ",
+    "selectStartDate": "Chọn ngày bắt đầu",
+    "selectEndDate": "Chọn ngày kết thúc",
+    "startDate": "Ngày bắt đầu",
+    "endDate": "Ngày kết thúc",
+    "errorFetchSettings": "Failed to fetch auto-reply settings",
+    "errorSavingSettings": "Failed to save auto-reply settings"
 }

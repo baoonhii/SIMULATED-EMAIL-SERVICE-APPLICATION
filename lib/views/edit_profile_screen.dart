@@ -131,6 +131,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.editProfile,
+      addDrawer: false,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

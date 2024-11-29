@@ -178,6 +178,40 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
+class AutoReplySettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = [
+            "auto_reply_enabled",
+            "auto_reply_message",
+            "auto_reply_start_date",
+            "auto_reply_end_date",
+        ]
+        extra_kwargs = {
+            "auto_reply_message": {"required": False, "allow_blank": True},
+            "auto_reply_from_email": {"required": False, "allow_blank": True},
+        }
+
+    def validate_auto_reply_message(self, value):
+        max_length = 500  # Example max length
+        if len(value) > max_length:
+            raise serializers.ValidationError(
+                f"Auto-reply message cannot exceed {max_length} characters."
+            )
+        return value
+
+    def validate(self, data):
+        # Ensure message is provided when enabling auto-reply
+        if data.get("auto_reply_enabled", False) and not data.get("auto_reply_message"):
+            raise serializers.ValidationError(
+                {
+                    "auto_reply_message": "Auto-reply message is required when auto-reply is enabled."
+                }
+            )
+
+        return data
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(
         required=True, style={"input_type": "password"}

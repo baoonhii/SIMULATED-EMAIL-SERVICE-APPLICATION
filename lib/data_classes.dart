@@ -88,7 +88,14 @@ class Account {
     );
   }
 
-  Account({required this.phone_number, required this.email, required this.first_name, required this.last_name, required this.profile_picture, required this.is_phone_verified});
+  Account({
+    required this.phone_number,
+    required this.email,
+    required this.first_name,
+    required this.last_name,
+    required this.profile_picture,
+    required this.is_phone_verified,
+  });
 
   Map<String, dynamic> toJson() {
     return {
@@ -112,7 +119,10 @@ class UserProfile {
   final String? birthdate;
   final bool two_factor_enabled;
 
-  UserProfile({required this.bio, required this.birthdate, required this.two_factor_enabled});
+  UserProfile(
+      {required this.bio,
+      required this.birthdate,
+      required this.two_factor_enabled});
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
@@ -158,8 +168,49 @@ class NotificationData {
 }
 
 class UserSetting {
-  final String autoReplyMessage;
-  final String userProfileURL;
+  final bool notifications_enabled;
+  final int font_size;
+  final String font_family;
+  final bool dark_mode;
+  final bool auto_reply_enabled;
+  final String? auto_reply_message;
+  final String? auto_reply_start_date;
+  final String? auto_reply_end_date;
 
-  UserSetting({required this.autoReplyMessage, required this.userProfileURL});
+  UserSetting({
+    required this.notifications_enabled,
+    required this.font_size,
+    required this.font_family,
+    required this.dark_mode,
+    required this.auto_reply_enabled,
+    required this.auto_reply_message,
+    required this.auto_reply_start_date,
+    required this.auto_reply_end_date,
+  });
+
+  factory UserSetting.fromJson(Map<String, dynamic> json) {
+    return UserSetting(
+      notifications_enabled: json['notifications_enabled'],
+      font_size: json['font_size'],
+      font_family: json['font_family'],
+      dark_mode: json['dark_mode'],
+      auto_reply_enabled: json['auto_reply_enabled'],
+      auto_reply_message: json['auto_reply_message'],
+      auto_reply_start_date: json['auto_reply_start_date'],
+      auto_reply_end_date: json['auto_reply_end_date'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'notifications_enabled': notifications_enabled,
+      'font_size': font_size,
+      'font_family': font_family,
+      'dark_mode': dark_mode,
+      'auto_reply_enabled': auto_reply_enabled,
+      'auto_reply_message': auto_reply_message,
+      'auto_reply_start_date': auto_reply_start_date,
+      'auto_reply_end_date': auto_reply_end_date,
+    };
+  }
 }

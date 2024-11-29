@@ -14,6 +14,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from .models import Attachment, Email, Label, User, UserProfile, UserSettings
 from .serializers import (
     AttachmentSerializer,
+    AutoReplySettingsSerializer,
     ChangePasswordSerializer,
     CreateEmailSerializer,
     EmailDetailSerializer,
@@ -25,6 +26,21 @@ from .serializers import (
     UserSerializer,
     UserSettingsSerializer,
 )
+
+
+class SessionTokenAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        session_token = request.headers.get("Authorization")
+        if not session_token:
+            return None
+
+        try:
+            user = User.objects.get(
+                session_token=session_token, session_expiry__gt=timezone.now()
+            )
+            return (user, None)
+        except User.DoesNotExist:
+            raise AuthenticationFailed("Invalid or expired token")
 
 
 # Authentication Views
@@ -101,21 +117,6 @@ class LoginView(APIView):
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class SessionTokenAuthentication(BaseAuthentication):
-    def authenticate(self, request):
-        session_token = request.headers.get("Authorization")
-        if not session_token:
-            return None
-
-        try:
-            user = User.objects.get(
-                session_token=session_token, session_expiry__gt=timezone.now()
-            )
-            return (user, None)
-        except User.DoesNotExist:
-            raise AuthenticationFailed("Invalid or expired token")
 
 
 class LogoutView(APIView):
@@ -229,6 +230,7 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
 class SendEmailView(generics.CreateAPIView):
     serializer_class = CreateEmailSerializer
+    authentication_classes = [SessionTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
@@ -239,6 +241,90 @@ class SendEmailView(generics.CreateAPIView):
         # Use the EmailSerializer to serialize the created email
         response_serializer = EmailSerializer(email)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AutoReplySettingsView(APIView):
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve current auto-reply settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+            serializer = AutoReplySettingsSerializer(user_settings)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({
+                'error': 'Unable to retrieve auto-reply settings',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request):
+        """
+        Update auto-reply settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+            
+            # Validate and update settings
+            serializer = AutoReplySettingsSerializer(
+                user_settings, 
+                data=request.data, 
+                partial=True
+            )
+            
+            if serializer.is_valid():
+                # Additional validation for date range
+                start_date = serializer.validated_data.get('auto_reply_start_date')
+                end_date = serializer.validated_data.get('auto_reply_end_date')
+                
+                if start_date and end_date and start_date > end_date:
+                    return Response({
+                        'error': 'Start date must be before end date'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Save the settings
+                serializer.save()
+                return Response(serializer.data)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            return Response({
+                'error': 'Unable to update auto-reply settings',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def patch(self, request):
+        """
+        Toggle auto-reply on/off
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+            
+            # Toggle auto-reply status
+            user_settings.auto_reply_enabled = not user_settings.auto_reply_enabled
+            
+            # If enabling, set default dates if not already set
+            if user_settings.auto_reply_enabled:
+                if not user_settings.auto_reply_start_date:
+                    user_settings.auto_reply_start_date = timezone.now()
+                if not user_settings.auto_reply_end_date:
+                    user_settings.auto_reply_end_date = timezone.now() + timezone.timedelta(days=30)
+            
+            user_settings.save()
+            
+            serializer = AutoReplySettingsSerializer(user_settings)
+            return Response(serializer.data)
+        
+        except Exception as e:
+            return Response({
+                'error': 'Unable to toggle auto-reply',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 # Advanced Email Views
@@ -282,26 +368,6 @@ class AdvancedEmailSearchView(generics.ListAPIView):
             queryset = queryset.filter(attachments__isnull=False).distinct()
 
         return queryset
-
-
-# Auto Reply Settings View
-class AutoReplySettingsView(generics.UpdateAPIView):
-    serializer_class = UserSettingsSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        settings, created = UserSettings.objects.get_or_create(user=self.request.user)
-        return settings
-
-    def perform_update(self, serializer):
-        # Additional validation for auto-reply message
-        auto_reply_message = serializer.validated_data.get("auto_reply_message")
-        if auto_reply_message and len(auto_reply_message) > 500:
-            raise ValidationError(
-                {"auto_reply_message": "Message too long (max 500 characters)"}
-            )
-
-        serializer.save()
 
 
 # Utility Functions

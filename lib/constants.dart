@@ -52,6 +52,7 @@ enum API_Endpoints {
   AUTH_VALIDATE_TOKEN('http://127.0.0.1:8000/auth/validate_token/'),
   USER_PROFILE('http://127.0.0.1:8000/user/profile/'),
   GET_IMAGE("http://127.0.0.1:8000"),
+  USER_AUTO_REPLY('http://127.0.0.1:8000/user/auto_rep/'),
   ;
 
   const API_Endpoints(this.value);

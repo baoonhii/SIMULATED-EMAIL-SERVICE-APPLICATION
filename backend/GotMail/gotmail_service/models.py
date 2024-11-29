@@ -219,18 +219,10 @@ class UserSettings(models.Model):
     dark_mode = models.BooleanField(default=False)
     auto_reply_enabled = models.BooleanField(default=False)
     auto_reply_message = models.TextField(blank=True, null=True)
-    # Add a signature field (optional):
-    signature = models.TextField(blank=True, null=True)
-
-    # Add settings for default "To" address for auto-reply
-    auto_reply_from_email = models.EmailField(blank=True, null=True)
     
     # Auto-reply scheduling
     auto_reply_start_date = models.DateTimeField(blank=True, null=True)
     auto_reply_end_date = models.DateTimeField(blank=True, null=True)
-    
-    notification_email = models.BooleanField(default=True)
-    notification_push = models.BooleanField(default=True)
     
     def __str__(self):
         return f"Settings for {self.user.phone_number}"

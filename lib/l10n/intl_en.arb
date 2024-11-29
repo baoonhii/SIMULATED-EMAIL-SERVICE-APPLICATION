@@ -43,5 +43,14 @@
     "lastName": "Last name",
     "bio": "Biography",
     "profileUpdated": "Profile updated",
-    "birthdate": "Birth date"
+    "birthdate": "Birth date",
+    "autoReplyMessageRequired": "Auto-reply message is required when enabled",
+    "autoReplyFromEmail": "From Email",
+    "autoReplyFromEmailHint": "Email address to send auto-replies from",
+    "selectStartDate": "Select Start Date",
+    "selectEndDate": "Select End Date",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "errorFetchSettings": "Failed to fetch auto-reply settings",
+    "errorSavingSettings": "Failed to save auto-reply settings"
 }
