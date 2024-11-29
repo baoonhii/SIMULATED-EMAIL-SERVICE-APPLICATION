@@ -109,6 +109,25 @@ class LogoutView(APIView):
         logout(request)
         return Response({"message": "Successfully logged out."})
 
+class ValidateTokenView(APIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request):
+        session_token = request.data.get('session_token')
+        try:
+            user = User.objects.get(
+                session_token=session_token, 
+                session_expiry__gt=timezone.now()
+            )
+            return Response({
+                "user": UserSerializer(user).data,
+                "message": "Token is valid"
+            }, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(
+                {"message": "Invalid or expired token"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer

@@ -31,6 +31,9 @@
          1. [ ] The new avatar will be updated automatically as soon as it is changed, and other users will see this update too.
 2. Compose and Send Email
    1. [ ] Basic Fields: Compose emails with fields like 'To', 'Subject', and 'Body'. Support for sending attachments.
+      1. [ ] Back-end
+         1. [x] API Endpoint
+      2. [ ] Front-end
    2. [ ] Advanced Editor: Include fields like 'CC', 'BCC' and integrate a WYSIWYG (What You See Is What You Get) editor for formatting.
    3. [ ] Reply and Forward: Reply to or forward emails to other users.
    4. [ ] Drafts: Autosave unsent emails as drafts.

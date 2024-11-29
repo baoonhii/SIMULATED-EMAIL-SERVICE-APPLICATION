@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
-from gotmail_service.views import LogoutView, RegisterView, LoginView, UserProfileView, SendEmailView
+from gotmail_service.views import LogoutView, RegisterView, LoginView, UserProfileView, SendEmailView, ValidateTokenView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name="api_register"),
     path('auth/login/', LoginView.as_view(), name="api_login"),
     path('auth/logout/', LogoutView.as_view(), name="api_logout"),
+    path('auth/validate_token/', ValidateTokenView.as_view(), name="validate_token"),
     path('auth/profile/', UserProfileView.as_view(), name="api_profile"),
     path('email/send/', SendEmailView.as_view(), name="api_send_mail"),
 ]

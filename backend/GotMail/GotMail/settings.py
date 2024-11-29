@@ -25,19 +25,20 @@ SECRET_KEY = "django-insecure--4*8pa%#^x67*j=l#=kbowawdc(x%-$y@zm2dtu_r(g&jn5tk_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [] # type: ignore
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']# type: ignore
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',  # Make sure this is here
+    'django.contrib.admin',  
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'daphne',
     'django.contrib.staticfiles',
+    'corsheaders',
     
     # Your custom apps and other third-party apps
     'gotmail_service',
@@ -58,6 +59,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "GotMail.urls"
@@ -158,3 +161,30 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
+
+
+
+CORS_ALLOWED_ORIGINS  = [
+    "http://127.0.0.1:8000",
+    "http://localhost:54391",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_METHODS = [ # required if making other types of requests besides GET
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "x-csrftoken",
+    "access-control-allow-origin",
+    "authorization",
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Important if you're using cookies or authentication that relies on credentials

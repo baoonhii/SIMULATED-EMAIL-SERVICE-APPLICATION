@@ -22,11 +22,11 @@ class EmailsProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      String jsonString = await rootBundle.loadString('mock.json');
-      Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-      List<dynamic> emailsJson = jsonMap['emails'];
+      // String jsonString = await rootBundle.loadString('mock.json');
+      // Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+      // List<dynamic> emailsJson = jsonMap['emails'];
 
-      _emails = emailsJson.map((json) => Email.fromJson(json)).toList();
+      // _emails = emailsJson.map((json) => Email.fromJson(json)).toList();
       _isLoading = false;
       notifyListeners();
     } catch (e) {

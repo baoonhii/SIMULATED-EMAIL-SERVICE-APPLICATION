@@ -136,7 +136,7 @@ UserAccountsDrawerHeader getDrawerHeader(
       color: drawerHeaderColor,
     ),
     accountName: Text(
-      currentAccount.userName,
+      currentAccount.first_name,
       style: TextStyle(color: textColor),
     ),
     accountEmail: Text(

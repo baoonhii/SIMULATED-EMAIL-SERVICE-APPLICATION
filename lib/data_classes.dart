@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 class Email {
   final String mailID;
   final String senderAddress;
@@ -68,31 +70,40 @@ class Email {
 }
 
 class Account {
-  final String userID;
+  final String phone_number;
   final String email;
-  final String userName;
-
-  Account({required this.userID, required this.email, required this.userName});
+  final String first_name;
+  final String last_name;
+  final String profile_picture;
+  final bool is_phone_verified;
 
   factory Account.fromJson(Map<String, dynamic> json) {
     return Account(
-      userID: json['userID'],
+      phone_number: json['phone_number'],
       email: json['email'],
-      userName: json['userName'],
+      first_name: json['first_name'],
+      last_name: json['last_name'],
+      profile_picture: json['profile_picture'],
+      is_phone_verified: json['is_phone_verified'],
     );
   }
 
+  Account({required this.phone_number, required this.email, required this.first_name, required this.last_name, required this.profile_picture, required this.is_phone_verified});
+
   Map<String, dynamic> toJson() {
     return {
-      'userID': userID,
+      'phone_number': phone_number,
       'email': email,
-      'userName': userName,
+      'first_name': first_name,
+      'last_name': last_name,
+      'profile_picture': profile_picture,
+      'is_phone_verified': is_phone_verified,
     };
   }
 
   @override
   String toString() {
-    return 'userID: $userID - email: $email by userName: $userName';
+    return 'phone_number: $phone_number - email: $email by first_name: $first_name';
   }
 }
 

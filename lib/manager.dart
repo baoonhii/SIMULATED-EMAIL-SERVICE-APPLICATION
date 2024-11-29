@@ -94,7 +94,7 @@ class LoginManager extends RouterManager {
     Object? arguments,
   }) {
     final Map<String, WidgetBuilder> routeMap = {
-      AuthRoutes.REGISTER.value: (context) => GmailRegisterScreen(),
+      AuthRoutes.REGISTER.value: (context) => const GmailRegisterScreen(),
     };
 
     WidgetBuilder builder =

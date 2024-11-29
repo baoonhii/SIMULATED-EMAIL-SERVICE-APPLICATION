@@ -48,6 +48,10 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
             return Center(child: Text(emailsProvider.errorMessage));
           }
 
+          if (emailsProvider.emails.isEmpty) {
+            return Center(child: Text("Inbox is empty"));
+          }
+
           return ListView.builder(
             itemCount: emailsProvider.emails.length,
             itemBuilder: (context, index) {

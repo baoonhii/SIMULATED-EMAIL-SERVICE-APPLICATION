@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_email/data_classes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
@@ -25,83 +22,79 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  List<Account> _mockDatabase = [];
+  bool _isCheckingSession = true;
 
   @override
   void initState() {
     super.initState();
-    _loadMockDatabase();
+    _checkSession();
   }
 
-  Future<void> _loadMockDatabase() async {
-    try {
-      String jsonString = await rootBundle.loadString('mock.json');
-      Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-      List<dynamic> accountsJson = jsonMap['accounts'];
+  Future<void> _checkSession() async {
+    final accountProvider =
+        Provider.of<AccountProvider>(context, listen: false);
 
-      setState(() {
-        _mockDatabase =
-            accountsJson.map((json) => Account.fromJson(json)).toList();
-      });
+    try {
+      final isValid = await accountProvider.isSessionValid();
+
+      if (isValid) {
+        // Session is valid, navigate to inbox
+        if (mounted) {
+          Navigator.pushReplacementNamed(
+            context,
+            MailRoutes.INBOX.value,
+          );
+        }
+      } else {
+        // Session is not valid, proceed with login screen
+        setState(() {
+          _isCheckingSession = false;
+        });
+      }
     } catch (e) {
-      print('Error loading mock database: $e');
+      // Handle session check error
+      setState(() {
+        _isCheckingSession = false;
+      });
+      print('Session check error: $e');
     }
   }
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
       });
 
-      // Simulated login logic (replace with actual authentication)
-      Future.delayed(const Duration(seconds: 1), () {
+      final phoneNumber = _emailController.text;
+      final password = _passwordController.text;
+
+      try {
+        await Provider.of<AccountProvider>(context, listen: false).login(
+          phoneNumber,
+          password,
+          () {
+            // Callback on success
+            print("Navigating to inbox");
+            if (mounted) {
+              Navigator.pushReplacementNamed(
+                context,
+                MailRoutes.INBOX.value,
+              );
+            }
+          },
+        );
+      } catch (e) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${e.toString()}')),
+        );
+      } finally {
         setState(() {
           _isLoading = false;
         });
-
-        // Mock authentication
-        Account? account = _authenticateUser(
-          _emailController.text,
-          _passwordController.text,
-        );
-
-        if (account != null) {
-          // Navigate to next screen or show success
-          if (mounted) {
-            final accountProvider =
-                Provider.of<AccountProvider>(context, listen: false);
-            accountProvider.setCurrentAccount(account);
-            Navigator.pushReplacementNamed(
-              context,
-              MailRoutes.INBOX.value,
-            );
-          }
-        } else {
-          // Show error message
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.invalidAuth),
-              ),
-            );
-          }
-        }
-      });
-    }
-  }
-
-  Account? _authenticateUser(String email, String password) {
-    // Simulate checking the email and password against the mock database
-    for (var account in _mockDatabase) {
-      if (account.email == email
-          //  && password == "password123"
-          ) {
-        // Return the account if the email and password match
-        return account;
       }
     }
-    return null;
   }
 
   @override
@@ -117,30 +110,32 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.signin,
       addDrawer: false,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              const SizedBox(height: 20),
-              getEmailField(),
-              const SizedBox(height: 16),
-              getPasswordField(),
-              const SizedBox(height: 24),
-              getLoginButton(),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  getForgetPasswordButton(),
-                  getRegisterButton(),
-                ],
+      body: _isCheckingSession
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    const SizedBox(height: 20),
+                    getEmailField(),
+                    const SizedBox(height: 16),
+                    getPasswordField(),
+                    const SizedBox(height: 24),
+                    getLoginButton(),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        getForgetPasswordButton(),
+                        getRegisterButton(),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
