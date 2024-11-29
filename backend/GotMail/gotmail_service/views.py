@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db.models import Q
@@ -6,6 +6,10 @@ from rest_framework import filters, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import get_object_or_404
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
 from .models import Attachment, Email, Label, User, UserProfile, UserSettings
 from .serializers import (
@@ -99,6 +103,21 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class SessionTokenAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        session_token = request.headers.get("Authorization")
+        if not session_token:
+            return None
+
+        try:
+            user = User.objects.get(
+                session_token=session_token, session_expiry__gt=timezone.now()
+            )
+            return (user, None)
+        except User.DoesNotExist:
+            raise AuthenticationFailed("Invalid or expired token")
+
+
 class LogoutView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -159,29 +178,53 @@ class ValidateTokenView(APIView):
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
+    authentication_classes = [SessionTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         # Override get_object to return the profile of the authenticated user
-        return self.request.user.profile
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return get_object_or_404(UserProfile, user=self.request.user)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        # Allow updating user details along with profile
+        user_data = {
+            "first_name": request.data.get("first_name"),
+            "last_name": request.data.get("last_name"),
+            "email": request.data.get("email"),
+        }
+
+        # Remove None values
+        user_data = {k: v for k, v in user_data.items() if v is not None}
+
+        if user_data:
+            user_serializer = UserSerializer(request.user, data=user_data, partial=True)
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
+
+        # Prepare profile data
+        profile_data = {
+            "bio": request.data.get("bio"),
+            "birthdate": request.data.get("birthdate"),
+        }
+
+        # Handle profile picture separately
+        if "profile_picture" in request.FILES:
+            profile_data["profile_picture"] = request.FILES["profile_picture"]
+
+        # Remove None values
+        profile_data = {k: v for k, v in profile_data.items() if v is not None}
+
+        serializer = self.get_serializer(instance, data=profile_data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"user": UserSerializer(request.user).data, "profile": serializer.data}
+        )
 
 
 class SendEmailView(generics.CreateAPIView):

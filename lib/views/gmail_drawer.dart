@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
@@ -143,8 +144,12 @@ UserAccountsDrawerHeader getDrawerHeader(
       currentAccount.email,
       style: TextStyle(color: textColor.withOpacity(0.7)),
     ),
-    currentAccountPicture: const CircleAvatar(
-      backgroundImage: NetworkImage(placeholderImage),
+    currentAccountPicture: CircleAvatar(
+      backgroundImage: CachedNetworkImageProvider(
+        getUserProfileImageURL(
+          currentAccount.profile_picture,
+        ),
+      ),
     ),
     otherAccountsPictures: [
       IconButton(

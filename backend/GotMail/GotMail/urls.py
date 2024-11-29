@@ -29,6 +29,6 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name="api_login"),
     path('auth/logout/', LogoutView.as_view(), name="api_logout"),
     path('auth/validate_token/', ValidateTokenView.as_view(), name="validate_token"),
-    path('auth/profile/', UserProfileView.as_view(), name="api_profile"),
+    path('user/profile/', UserProfileView.as_view(), name="api_profile"),
     path('email/send/', SendEmailView.as_view(), name="api_send_mail"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,17 +1,132 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_email/data_classes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../constants.dart';
 import '../state_management/account_provider.dart';
 import 'gmail_base_screen.dart';
+import 'package:file_picker/file_picker.dart';
 
-class EditProfileScreen extends StatelessWidget {
-  EditProfileScreen({super.key});
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
 
-  final TextEditingController _nameController = TextEditingController();
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
 
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final TextEditingController _firstnameController = TextEditingController();
+  final TextEditingController _lastnameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _birthdateController = TextEditingController();
+
+  File? _imageFile;
+  Uint8List? _imageBytes;
+  bool _isHovering = false;
+  DateTime? _selectedBirthdate;
+
+  @override
+  void initState() {
+    super.initState();
+    final accountProvider =
+        Provider.of<AccountProvider>(context, listen: false);
+    final currentAccount = accountProvider.currentAccount!;
+
+    accountProvider.fetchUserProfile().then((value) {
+      _bioController.text = accountProvider.userProfile!.bio!;
+      // Set birthdate if available
+      if (accountProvider.userProfile!.birthdate != null) {
+        setState(() {
+          _selectedBirthdate = DateFormat('yyyy-MM-dd').parse(
+            accountProvider.userProfile!.birthdate!,
+          );
+          _birthdateController.text = DateFormat('yyyy-MM-dd').format(
+            _selectedBirthdate!,
+          );
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching profile: $error')),
+        );
+      }
+    });
+
+    _firstnameController.text = currentAccount.first_name;
+    _lastnameController.text = currentAccount.last_name;
+    _emailController.text = currentAccount.email;
+  }
+
+  Future<void> _pickImage() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true, // For getting Uint8List
+    );
+
+    if (result != null) {
+      setState(() {
+        if (kIsWeb) {
+          _imageBytes = result.files.first.bytes;
+        } else {
+          _imageFile = File(result.files.first.path!);
+        }
+      });
+    }
+  }
+
+  Future<void> _selectBirthdate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedBirthdate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null && pickedDate != _selectedBirthdate) {
+      setState(() {
+        _selectedBirthdate = pickedDate;
+        _birthdateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+      });
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    final accountProvider =
+        Provider.of<AccountProvider>(context, listen: false);
+
+    try {
+      await accountProvider.updateProfile(
+        firstName: _firstnameController.text,
+        lastName: _lastnameController.text,
+        email: _emailController.text,
+        bio: _bioController.text,
+        birthdate: _selectedBirthdate, // Add birthdate to the update method
+        // Use `File` for mobile/desktop
+        profilePicture: kIsWeb ? null : _imageFile,
+        // Use `Uint8List` for web
+        profilePictureBytes: kIsWeb ? _imageBytes : null,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.profileUpdated)),
+        );
+
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating profile: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,63 +134,131 @@ class EditProfileScreen extends StatelessWidget {
     final currentAccount = accountProvider.currentAccount!;
 
     return GmailBaseScreen(
-      title: AppLocalizations.of(context)!.createAccount,
-      addDrawer: false,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(
-              width: 50.0,
-              height: 50.0,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: CachedNetworkImage(
-                  imageUrl:
-                      getUserProfileImageURL(currentAccount.profile_picture),
-                  placeholder: (context, url) =>
-                      const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.profileSettingName,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.saveSettingChanges,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ],
+      title: AppLocalizations.of(context)!.editProfile,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              getProfileImagePicker(currentAccount),
+              const SizedBox(height: 16),
+              getFirstNameField(context),
+              const SizedBox(height: 16),
+              getLastNameField(context),
+              const SizedBox(height: 16),
+              getEmailField(),
+              const SizedBox(height: 16),
+              getBirthdateField(context),
+              const SizedBox(height: 16),
+              getBioField(context),
+              const SizedBox(height: 16),
+              getUpdateProfileButton(context),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  TextField getBirthdateField(BuildContext context) {
+    return TextField(
+      controller: _birthdateController,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.birthdate,
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.calendar_today),
+          onPressed: _selectBirthdate,
+        ),
+      ),
+      readOnly: true,
+      onTap: _selectBirthdate,
+    );
+  }
+
+  MouseRegion getProfileImagePicker(Account currentAccount) {
+    return MouseRegion(
+      onEnter: (event) => setState(() => _isHovering = true),
+      onExit: (event) => setState(() => _isHovering = false),
+      child: GestureDetector(
+        onTap: _pickImage,
+        child: ClipOval(
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 60,
+                backgroundImage: _imageBytes != null
+                    ? MemoryImage(_imageBytes!) // For web
+                    : _imageFile != null
+                        ? FileImage(_imageFile!) // For mobile/desktop
+                        : NetworkImage(
+                            getUserProfileImageURL(
+                              currentAccount.profile_picture,
+                            ),
+                          ) as ImageProvider,
+              ),
+              if (_isHovering)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  TextField getFirstNameField(BuildContext context) {
+    return TextField(
+      controller: _firstnameController,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.firstName,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  TextField getLastNameField(BuildContext context) {
+    return TextField(
+      controller: _lastnameController,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.lastName,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  TextField getEmailField() {
+    return TextField(
+      controller: _emailController,
+      decoration: const InputDecoration(
+        labelText: 'Email',
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  TextField getBioField(BuildContext context) {
+    return TextField(
+      controller: _bioController,
+      maxLines: 3,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.bio,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  ElevatedButton getUpdateProfileButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _updateProfile,
+      child: Text(AppLocalizations.of(context)!.saveSettingChanges),
     );
   }
 }

@@ -107,6 +107,35 @@ class Account {
   }
 }
 
+class UserProfile {
+  final String? bio;
+  final String? birthdate;
+  final bool two_factor_enabled;
+
+  UserProfile({required this.bio, required this.birthdate, required this.two_factor_enabled});
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      bio: json['bio'],
+      birthdate: json['birthdate'],
+      two_factor_enabled: json['two_factor_enabled'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bio': bio,
+      'birthdate': birthdate,
+      'two_factor_enabled': two_factor_enabled,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'bio: $bio - birthdate: $birthdate - two_factor_enabled: $two_factor_enabled';
+  }
+}
+
 class NotificationData {
   final String notifTitle;
   final String notifSubtitle;

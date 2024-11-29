@@ -37,5 +37,11 @@
     "autoRepMessage": "Tin nhắn tự động",
     "autoRepMessageHint": "Nhập tin nhắn tự động của bạn ở đây",
     "hello": "Xin chào",
-    "continueNext": "Tiếp tục"
+    "continueNext": "Tiếp tục",
+    "editProfile": "Thay đổi thông tin cá nhân", 
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "bio": "Tiểu sử",
+    "profileUpdated": "Cập nhật thông tin thành công",
+    "birthdate": "Ngày sinh"
 }

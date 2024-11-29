@@ -37,5 +37,11 @@
     "autoRepMessage": "Auto-reply",
     "autoRepMessageHint": "Enter a message that will be sent automatically",
     "hello": "Hello",
-    "continueNext": "Continue"
+    "continueNext": "Continue",
+    "editProfile": "Change profile info",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "bio": "Biography",
+    "profileUpdated": "Profile updated",
+    "birthdate": "Birth date"
 }

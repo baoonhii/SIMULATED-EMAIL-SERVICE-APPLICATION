@@ -50,6 +50,7 @@ enum API_Endpoints {
   AUTH_LOGIN('http://127.0.0.1:8000/auth/login/'),
   AUTH_LOGOUT('http://127.0.0.1:8000/auth/logout/'),
   AUTH_VALIDATE_TOKEN('http://127.0.0.1:8000/auth/validate_token/'),
+  USER_PROFILE('http://127.0.0.1:8000/user/profile/'),
   GET_IMAGE("http://127.0.0.1:8000"),
   ;
 
@@ -59,6 +60,5 @@ enum API_Endpoints {
 
 String getUserProfileImageURL(String url) {
   final finalUrl = "${API_Endpoints.GET_IMAGE.value}$url";
-  print(finalUrl);
   return finalUrl;
 }
