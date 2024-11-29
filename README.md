@@ -8,11 +8,20 @@
 
 1. Account Management
    1. [ ] Registration: Users register using their phone number (not email).
+      1. [ ] Back-end
+         1. [x] API Endpoint
+      2. [ ] Front-end
    2. [ ] Login: Secure login functionality.
       1. [ ] After successful login, the app must save data to mark that the user has logged in, so in subsequent app openings, users can use the app immediately without needing to log in again (unless the session has expired).
-   3. [ ] Password Management: Allow password changes and recovery.
-   4. [ ] Two-step Verification: Option for users to enable/disable.
-   5. [ ] Profile Management: View and update personal information, including profile pictures.
+         1. [ ] Front-end
+         2. [ ] Back-end
+            1. [x] API Endpoint
+         3. [ ] Front-end
+   3. [ ] Logout
+      1. [ ] Back-end
+   4. [ ] Password Management: Allow password changes and recovery.
+   5. [ ] Two-step Verification: Option for users to enable/disable.
+   6. [ ] Profile Management: View and update personal information, including profile pictures.
       1. [ ] Change password
       2. [ ] Password recovery
       3. [ ] Enable and use 2 steps verification

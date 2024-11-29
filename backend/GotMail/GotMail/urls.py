@@ -16,7 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth import views as auth_views
+
+from gotmail_service.views import LogoutView, RegisterView, LoginView, UserProfileView, SendEmailView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
+    # API END POINTS
+    path('auth/register/', RegisterView.as_view(), name="api_register"),
+    path('auth/login/', LoginView.as_view(), name="api_login"),
+    path('auth/logout/', LogoutView.as_view(), name="api_logout"),
+    path('auth/profile/', UserProfileView.as_view(), name="api_profile"),
+    path('email/send/', SendEmailView.as_view(), name="api_send_mail"),
 ]

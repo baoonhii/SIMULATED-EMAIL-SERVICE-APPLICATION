@@ -25,18 +25,29 @@ SECRET_KEY = "django-insecure--4*8pa%#^x67*j=l#=kbowawdc(x%-$y@zm2dtu_r(g&jn5tk_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [] # type: ignore
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
+    'django.contrib.admin',  # Make sure this is here
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'daphne',
+    'django.contrib.staticfiles',
+    
+    # Your custom apps and other third-party apps
+    'gotmail_service',
+    'channels',
+    'rest_framework',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
+    'two_factor.plugins.phonenumber',
 ]
 
 MIDDLEWARE = [
@@ -127,3 +138,23 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+ASGI_APPLICATION = "GotMail.asgi.application"
+
+AUTH_USER_MODEL = 'gotmail_service.User'
+
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
