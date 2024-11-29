@@ -26,6 +26,7 @@ from .serializers import (
 # Authentication Views
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -78,6 +79,7 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
@@ -98,35 +100,61 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request):
-        # Clear session token
-        if request.user.is_authenticated:
-            request.user.session_token = None
-            request.user.session_expiry = None
-            request.user.save()
+    permission_classes = [permissions.AllowAny]
 
-        logout(request)
-        return Response({"message": "Successfully logged out."})
+    def post(self, request):
+        try:
+            # Try to get the session token from the request
+            session_token = request.data.get("session_token") or request.headers.get(
+                "Authorization"
+            )
+
+            # If token is provided, try to find and invalidate the user's session
+            if session_token:
+                try:
+                    user = User.objects.get(
+                        session_token=session_token, session_expiry__gt=timezone.now()
+                    )
+                    user.session_token = None
+                    user.session_expiry = None
+                    user.save()
+                except User.DoesNotExist:
+                    # Token not found or expired, but we'll still proceed with logout
+                    pass
+
+            # Perform Django logout
+            logout(request)
+
+            return Response(
+                {"message": "Successfully logged out."}, status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"message": f"Logout failed: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
 class ValidateTokenView(APIView):
     permission_classes = [permissions.AllowAny]
+
     def post(self, request):
-        session_token = request.data.get('session_token')
+        session_token = request.data.get("session_token")
         try:
             user = User.objects.get(
-                session_token=session_token, 
-                session_expiry__gt=timezone.now()
+                session_token=session_token, session_expiry__gt=timezone.now()
             )
-            return Response({
-                "user": UserSerializer(user).data,
-                "message": "Token is valid"
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {"user": UserSerializer(user).data, "message": "Token is valid"},
+                status=status.HTTP_200_OK,
+            )
         except User.DoesNotExist:
             return Response(
-                {"message": "Invalid or expired token"}, 
-                status=status.HTTP_401_UNAUTHORIZED
+                {"message": "Invalid or expired token"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
+
 
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
@@ -143,7 +171,7 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -155,6 +183,7 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class SendEmailView(generics.CreateAPIView):
     serializer_class = CreateEmailSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -163,10 +192,11 @@ class SendEmailView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.save()
-        
+
         # Use the EmailSerializer to serialize the created email
         response_serializer = EmailSerializer(email)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
 
 # Advanced Email Views
 class AdvancedEmailSearchView(generics.ListAPIView):

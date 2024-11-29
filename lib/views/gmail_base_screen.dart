@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../other_widgets/locale_switcher.dart';
+import '../state_management/account_provider.dart';
 import 'gmail_drawer.dart';
 import '../state_management/locale_provider.dart';
 
@@ -36,7 +37,11 @@ class _GmailBaseScreenState extends State<GmailBaseScreen> {
           context,
         );
 
-    final drawer = widget.addDrawer ? const GmailDrawer() : null;
+    final accountProvider = Provider.of<AccountProvider>(context);
+
+    final drawer = widget.addDrawer && accountProvider.currentAccount != null
+        ? const GmailDrawer()
+        : null;
 
     return Scaffold(
       appBar: AppBar(

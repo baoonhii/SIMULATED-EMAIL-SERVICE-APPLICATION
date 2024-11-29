@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_email/views/gmail_base_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
+import '../state_management/account_provider.dart';
 
 class UserSettingsScreen extends StatefulWidget {
   const UserSettingsScreen({super.key});
@@ -77,12 +79,17 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: Text(AppLocalizations.of(context)!.logout),
-            onTap: () {
-              // Handle logout functionality here
-            },
+            onTap: _logout,
           ),
         ],
       ),
     );
+  }
+
+  void _logout() async {
+    await Provider.of<AccountProvider>(context, listen: false).logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed(AuthRoutes.LOGIN.value);
+    }
   }
 }

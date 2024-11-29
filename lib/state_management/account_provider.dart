@@ -121,18 +121,27 @@ class AccountProvider extends ChangeNotifier {
       if (storedToken != null) {
         final response = await http.post(
           url,
-          body: json.encode({'session_token': storedToken}),
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': storedToken,
+          },
         );
 
-        if (response.statusCode == 200) {
-          clearCurrentAccount();
-        } else {
-          print('Logout failed');
+        // Always clear the account, regardless of logout request success
+        clearCurrentAccount();
+
+        if (response.statusCode != 200) {
+          print(
+              'Logout request failed with status code: ${response.statusCode}');
         }
+      } else {
+        // If no stored token, just clear the account
+        clearCurrentAccount();
       }
     } catch (e) {
       print('Error during logout: $e');
+      // Ensure account is cleared even if there's a network error
+      clearCurrentAccount();
     }
   }
 
