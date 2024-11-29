@@ -17,6 +17,9 @@ List<Widget> getLanguageChangeDropdown(
   LocaleProvider localeProvider,
   FocusNode focusNode,
 ) {
+  final theme = Theme.of(context);
+  final dropdownTextStyle = getDropdownTextStyle(context);
+
   return [
     SizedBox(
       width: 200,
@@ -50,26 +53,44 @@ List<Widget> getLanguageChangeDropdown(
             // Customize the border
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
-              borderSide: const BorderSide(color: Colors.grey),
+              borderSide: BorderSide(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
             ),
             // Customize the filled color
             filled: true,
-            fillColor: Colors.white,
+            fillColor: theme.brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[200],
             // Customize the content padding
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16.0,
               vertical: 8.0,
             ),
             // Optional: customize the dropdown icon
-            suffixIcon: const Icon(Icons.language, color: Colors.blue),
+            suffixIcon: Icon(
+              Icons.language,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
+            ),
           ),
-          // Customize the dropdown button style
-          dropdownColor: Colors.white,
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-          iconEnabledColor: Colors.blue,
-          iconDisabledColor: Colors.grey,
+          style: dropdownTextStyle,
+          dropdownColor: theme.brightness == Brightness.dark
+              ? Colors.grey[800]
+              : Colors.white,
         ),
       ),
     ),
   ];
+}
+
+TextStyle getDropdownTextStyle(BuildContext context) {
+  final theme = Theme.of(context);
+  return TextStyle(
+    fontSize: 16,
+    color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+  );
 }

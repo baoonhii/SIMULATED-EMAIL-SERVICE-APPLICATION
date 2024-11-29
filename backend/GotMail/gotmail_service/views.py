@@ -19,6 +19,7 @@ from .serializers import (
     CreateEmailSerializer,
     EmailDetailSerializer,
     EmailSerializer,
+    FontSettingsSerializer,
     LabelSerializer,
     LoginSerializer,
     UserProfileSerializer,
@@ -228,6 +229,191 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
+class AutoReplySettingsView(APIView):
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve current auto-reply settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+            serializer = AutoReplySettingsSerializer(user_settings)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": "Unable to retrieve auto-reply settings", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def put(self, request):
+        """
+        Update auto-reply settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+
+            # Validate and update settings
+            serializer = AutoReplySettingsSerializer(
+                user_settings, data=request.data, partial=True
+            )
+
+            if serializer.is_valid():
+                # Additional validation for date range
+                start_date = serializer.validated_data.get("auto_reply_start_date")
+                end_date = serializer.validated_data.get("auto_reply_end_date")
+
+                if start_date and end_date and start_date > end_date:
+                    return Response(
+                        {"error": "Start date must be before end date"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Save the settings
+                serializer.save()
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": "Unable to update auto-reply settings", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def patch(self, request):
+        """
+        Toggle auto-reply on/off
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+
+            # Toggle auto-reply status
+            user_settings.auto_reply_enabled = not user_settings.auto_reply_enabled
+
+            # If enabling, set default dates if not already set
+            if user_settings.auto_reply_enabled:
+                if not user_settings.auto_reply_start_date:
+                    user_settings.auto_reply_start_date = timezone.now()
+                if not user_settings.auto_reply_end_date:
+                    user_settings.auto_reply_end_date = (
+                        timezone.now() + timezone.timedelta(days=30)
+                    )
+
+            user_settings.save()
+
+            serializer = AutoReplySettingsSerializer(user_settings)
+            return Response(serializer.data)
+
+        except Exception as e:
+            return Response(
+                {"error": "Unable to toggle auto-reply", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class FontSettingsView(APIView):
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve current font settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+            serializer = FontSettingsSerializer(user_settings)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": "Unable to retrieve font settings", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def put(self, request):
+        """
+        Update font settings for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+
+            # Validate and update settings
+            serializer = FontSettingsSerializer(
+                user_settings, data=request.data, partial=True
+            )
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": "Unable to update font settings", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class DarkModeToggleView(APIView):
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve current dark mode setting for the authenticated user
+        """
+        try:
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+            return Response({"dark_mode": user_settings.dark_mode})
+        except Exception as e:
+            return Response(
+                {"error": "Unable to retrieve dark mode setting", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def patch(self, request):
+        """
+        Set dark mode setting for the authenticated user based on the provided boolean value
+        """
+        try:
+            print(request)
+            user_settings, created = UserSettings.objects.get_or_create(
+                user=request.user
+            )
+            dark_mode = request.data.get("dark_mode")
+            print(dark_mode)
+
+            if dark_mode is None:
+                return Response(
+                    {"error": "dark_mode field is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            user_settings.dark_mode = dark_mode
+            user_settings.save()
+
+            return Response({"dark_mode": user_settings.dark_mode})
+        except Exception as e:
+            return Response(
+                {"error": "Unable to set dark mode", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class SendEmailView(generics.CreateAPIView):
     serializer_class = CreateEmailSerializer
     authentication_classes = [SessionTokenAuthentication]
@@ -241,90 +427,6 @@ class SendEmailView(generics.CreateAPIView):
         # Use the EmailSerializer to serialize the created email
         response_serializer = EmailSerializer(email)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-
-class AutoReplySettingsView(APIView):
-    authentication_classes = [SessionTokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        """
-        Retrieve current auto-reply settings for the authenticated user
-        """
-        try:
-            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
-            serializer = AutoReplySettingsSerializer(user_settings)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({
-                'error': 'Unable to retrieve auto-reply settings',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def put(self, request):
-        """
-        Update auto-reply settings for the authenticated user
-        """
-        try:
-            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
-            
-            # Validate and update settings
-            serializer = AutoReplySettingsSerializer(
-                user_settings, 
-                data=request.data, 
-                partial=True
-            )
-            
-            if serializer.is_valid():
-                # Additional validation for date range
-                start_date = serializer.validated_data.get('auto_reply_start_date')
-                end_date = serializer.validated_data.get('auto_reply_end_date')
-                
-                if start_date and end_date and start_date > end_date:
-                    return Response({
-                        'error': 'Start date must be before end date'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-                
-                # Save the settings
-                serializer.save()
-                return Response(serializer.data)
-            
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        except Exception as e:
-            return Response({
-                'error': 'Unable to update auto-reply settings',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def patch(self, request):
-        """
-        Toggle auto-reply on/off
-        """
-        try:
-            user_settings, created = UserSettings.objects.get_or_create(user=request.user)
-            
-            # Toggle auto-reply status
-            user_settings.auto_reply_enabled = not user_settings.auto_reply_enabled
-            
-            # If enabling, set default dates if not already set
-            if user_settings.auto_reply_enabled:
-                if not user_settings.auto_reply_start_date:
-                    user_settings.auto_reply_start_date = timezone.now()
-                if not user_settings.auto_reply_end_date:
-                    user_settings.auto_reply_end_date = timezone.now() + timezone.timedelta(days=30)
-            
-            user_settings.save()
-            
-            serializer = AutoReplySettingsSerializer(user_settings)
-            return Response(serializer.data)
-        
-        except Exception as e:
-            return Response({
-                'error': 'Unable to toggle auto-reply',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 # Advanced Email Views

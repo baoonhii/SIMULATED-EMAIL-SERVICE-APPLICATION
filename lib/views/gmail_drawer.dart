@@ -18,9 +18,9 @@ class GmailDrawer extends StatelessWidget {
     final accountProvider = Provider.of<AccountProvider>(context);
     final currentAccount = accountProvider.currentAccount!;
 
-    Color textColor = Theme.of(context).colorScheme.onPrimary;
+    Color textColor = Theme.of(context).colorScheme.onSecondary;
     Color iconColor = Theme.of(context).iconTheme.color!;
-    Color drawerHeaderColor = Theme.of(context).colorScheme.primary;
+    Color drawerHeaderColor = Theme.of(context).colorScheme.secondary;
     Color dividerColor = Theme.of(context).dividerColor;
     Color drawerTextColor = Theme.of(context).colorScheme.onSurface;
 
@@ -84,9 +84,6 @@ class GmailDrawer extends StatelessWidget {
             context,
             currentAccount,
           ),
-          Divider(
-            color: dividerColor,
-          ),
           drawerItem(
             currentAccount,
             icon: Icons.inbox,
@@ -137,7 +134,7 @@ UserAccountsDrawerHeader getDrawerHeader(
       color: drawerHeaderColor,
     ),
     accountName: Text(
-      currentAccount.first_name,
+      "${currentAccount.first_name} ${currentAccount.last_name}",
       style: TextStyle(color: textColor),
     ),
     accountEmail: Text(

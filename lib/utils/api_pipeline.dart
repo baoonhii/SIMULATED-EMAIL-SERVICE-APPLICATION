@@ -52,6 +52,13 @@ Future<dynamic> fetchData({
           body: body != null ? json.encode(body) : null,
         );
         break;
+      case 'PATCH':
+        response = await http.patch(
+          url,
+          headers: preparedHeaders,
+          body: body != null ? json.encode(body) : null,
+        );
+        break;
       default:
         throw UnsupportedError('Unsupported HTTP method: $method');
     }

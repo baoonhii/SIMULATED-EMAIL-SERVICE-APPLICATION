@@ -1,7 +1,7 @@
 // ignore_for_file: camel_case_types
 
 const Route404 = "404";
-const placeholderImage = 'assets/placeholder.jpg';
+const placeholderImage = "assets/placeholder.jpg";
 const appName = "GotMail";
 
 enum SettingsRoutes {
@@ -45,14 +45,19 @@ enum MailSubroutes {
   final String value;
 }
 
+const API_ROOT = "http://127.0.0.1:8000";
+const mediaServer = "http://127.0.0.1:8000";
+
 enum API_Endpoints {
-  AUTH_REGISTER('http://127.0.0.1:8000/auth/register/'),
-  AUTH_LOGIN('http://127.0.0.1:8000/auth/login/'),
-  AUTH_LOGOUT('http://127.0.0.1:8000/auth/logout/'),
-  AUTH_VALIDATE_TOKEN('http://127.0.0.1:8000/auth/validate_token/'),
-  USER_PROFILE('http://127.0.0.1:8000/user/profile/'),
-  GET_IMAGE("http://127.0.0.1:8000"),
-  USER_AUTO_REPLY('http://127.0.0.1:8000/user/auto_rep/'),
+  AUTH_REGISTER("$API_ROOT/auth/register/"),
+  AUTH_LOGIN("$API_ROOT/auth/login/"),
+  AUTH_LOGOUT("$API_ROOT/auth/logout/"),
+  AUTH_VALIDATE_TOKEN("$API_ROOT/auth/validate_token/"),
+  USER_PROFILE("$API_ROOT/user/profile/"),
+  GET_IMAGE(mediaServer),
+  USER_AUTO_REPLY("$API_ROOT/user/auto_rep/"),
+  USER_DARKMODE("$API_ROOT/user/darkmode/"),
+  USER_EMAIL_PREF("$API_ROOT/user/email_pref/"),
   ;
 
   const API_Endpoints(this.value);
@@ -63,3 +68,17 @@ String getUserProfileImageURL(String url) {
   final finalUrl = "${API_Endpoints.GET_IMAGE.value}$url";
   return finalUrl;
 }
+
+const List<String> fontSizes = ["Small", "Medium", "Large"];
+const List<String> fontFamilies = ["Sans-serif", "Serif", "Monospace"];
+
+
+
+const Map<String, String> fontFamilySelectMap = {
+  "Sans-serif": "sans-serif",
+  "Serif": "serif",
+  "Monospace": "monospace"
+};
+
+
+var fontFamilyValueMap = fontFamilySelectMap.map((k, v) => MapEntry(v, k));

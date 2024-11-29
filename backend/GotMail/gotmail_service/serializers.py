@@ -211,6 +211,11 @@ class AutoReplySettingsSerializer(serializers.ModelSerializer):
 
         return data
 
+class FontSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = ['font_size', 'font_family']
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(

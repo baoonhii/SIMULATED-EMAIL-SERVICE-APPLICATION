@@ -6,14 +6,21 @@ import 'state_management/account_provider.dart';
 import 'state_management/email_provider.dart';
 import 'state_management/locale_provider.dart';
 import 'manager.dart';
+import 'state_management/theme_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.fetchDarkModeSetting();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LocaleProvider()),
         ChangeNotifierProvider(create: (context) => EmailsProvider()),
         ChangeNotifierProvider(create: (context) => AccountProvider()),
+        ChangeNotifierProvider(create: (context) => themeProvider),
         // Add other providers here in the future
       ],
       child: const MyApp(),
@@ -27,6 +34,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
       title: appName,
@@ -35,9 +43,14 @@ class MyApp extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: localeProvider.locale,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
       ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.purple,
+        brightness: Brightness.dark,
+      ),
+      themeMode: themeProvider.themeMode,
       initialRoute: AuthRoutes.LOGIN.value,
       onGenerateRoute: (settings) => getRouterManager(settings, context),
     );

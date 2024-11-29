@@ -52,5 +52,11 @@
     "startDate": "Ngày bắt đầu",
     "endDate": "Ngày kết thúc",
     "errorFetchSettings": "Failed to fetch auto-reply settings",
-    "errorSavingSettings": "Failed to save auto-reply settings"
+    "errorSavingSettings": "Failed to save auto-reply settings",
+    "emailPrefSetting": "Cài đặt soạn thư",
+    "fontSize": "Cỡ font",
+    "fontFamily": "Kiểu Font",
+    "smallFont": "Nhỏ",
+    "mediumFont": "Trung",
+    "largeFont": "Lớn"
 }

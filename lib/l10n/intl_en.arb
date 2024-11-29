@@ -52,5 +52,11 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "errorFetchSettings": "Failed to fetch auto-reply settings",
-    "errorSavingSettings": "Failed to save auto-reply settings"
+    "errorSavingSettings": "Failed to save auto-reply settings",
+    "emailPrefSetting": "Email compose settings",
+    "fontSize": "Font size",
+    "fontFamily": "Font family",
+    "smallFont": "Small",
+    "mediumFont": "Medium",
+    "largeFont": "Large"
 }

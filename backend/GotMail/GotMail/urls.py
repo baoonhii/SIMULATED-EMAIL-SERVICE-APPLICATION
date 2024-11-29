@@ -21,6 +21,8 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from GotMail import settings
 from gotmail_service.views import (
+    DarkModeToggleView,
+    FontSettingsView,
     LogoutView,
     RegisterView,
     LoginView,
@@ -40,5 +42,7 @@ urlpatterns = [
     path("auth/validate_token/", ValidateTokenView.as_view(), name="validate_token"),
     path("user/profile/", UserProfileView.as_view(), name="api_profile"),
     path("user/auto_rep/", AutoReplySettingsView.as_view(), name="api_send_mail"),
+    path("user/darkmode/", DarkModeToggleView.as_view(), name="api_darkmode_toggle"),
+    path("user/email_pref/", FontSettingsView.as_view(), name="api_email_pref"),
     path("email/send/", SendEmailView.as_view(), name="api_send_mail"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

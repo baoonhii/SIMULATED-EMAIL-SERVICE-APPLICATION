@@ -4,7 +4,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../constants.dart';
+import '../other_widgets/general.dart';
 import '../state_management/account_provider.dart';
+import '../state_management/theme_provider.dart';
+import '../utils/api_pipeline.dart';
 
 class UserSettingsScreen extends StatefulWidget {
   const UserSettingsScreen({super.key});
@@ -14,8 +17,75 @@ class UserSettingsScreen extends StatefulWidget {
 }
 
 class _UserSettingsScreenState extends State<UserSettingsScreen> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDarkModeSetting();
+  }
+
+  Future<void> _fetchDarkModeSetting() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+      await themeProvider.fetchDarkModeSetting();
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, AppLocalizations.of(context)!.errorFetchSettings);
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleDarkMode(bool value) async {
+    try {
+      final body = {
+        'dark_mode': value,
+      };
+
+      await fetchData(
+        url: Uri.parse(API_Endpoints.USER_DARKMODE.value),
+        method: 'PATCH',
+        body: body,
+      );
+
+      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+      themeProvider.setThemeMode(value);
+
+      if (mounted) {
+        showSnackBar(context, AppLocalizations.of(context)!.saveSettingChanges);
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(
+          context,
+          AppLocalizations.of(context)!.errorSavingSettings,
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.userSettings,
       body: ListView(
@@ -69,9 +139,10 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
             child: SwitchListTile(
               title: Text(AppLocalizations.of(context)!.darkModeToggle),
               secondary: const Icon(Icons.brightness_6, color: Colors.blue),
-              value: Theme.of(context).brightness == Brightness.dark,
+              value: themeProvider.isDarkMode ?? false,
               onChanged: (value) {
-                // onThemeToggle();
+                print(value);
+                _toggleDarkMode(value);
               },
             ),
           ),
