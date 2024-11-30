@@ -142,6 +142,19 @@ class Email(models.Model):
         ('forwarded', 'Forwarded')
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
+    
+    MAILBOX_CHOICES = [
+        ('inbox', 'Inbox'),
+        ('sent', 'Sent'),
+        ('draft', 'Draft'),
+        ('trash', 'Trash')
+    ]
+    
+    mailbox = models.CharField(
+        max_length=20, 
+        choices=MAILBOX_CHOICES, 
+        default='inbox'
+    )
 
     def __str__(self):
         return f"Email from {self.sender} to {self.recipients.all()} - {self.subject}"
@@ -163,6 +176,11 @@ class Email(models.Model):
 
     def move_to_trash(self):
         self.is_trashed = True
+        self.save()
+    
+    def move_to_mailbox(self, mailbox):
+        """Move email to specified mailbox"""
+        self.mailbox = mailbox
         self.save()
 
 

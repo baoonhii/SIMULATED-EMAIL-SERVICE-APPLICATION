@@ -1,32 +1,50 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import '../constants.dart';
 import '../data_classes.dart';
+import '../utils/api_pipeline.dart';
 
 class EmailsProvider extends ChangeNotifier {
   List<Email> _emails = [];
+  List<Email> _sentEmails = [];
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
 
   // Getters
   List<Email> get emails => _emails;
+  List<Email> get sentEmails => _sentEmails;
   bool get isLoading => _isLoading;
   bool get hasError => _hasError;
   String get errorMessage => _errorMessage;
 
-  Future<void> fetchMails() async {
+  Future<void> fetchEmails({String mailbox = 'inbox'}) async {
+    print("Fetching $mailbox");
     try {
       _isLoading = true;
       _hasError = false;
       _errorMessage = '';
       notifyListeners();
 
-      // String jsonString = await rootBundle.loadString('mock.json');
-      // Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-      // List<dynamic> emailsJson = jsonMap['emails'];
+      final responseData = await makeAPIRequest(
+        url: Uri.parse('${API_Endpoints.EMAIL_LIST.value}?mailbox=$mailbox'),
+        method: 'GET',
+      );
 
-      // _emails = emailsJson.map((json) => Email.fromJson(json)).toList();
+      if (mailbox == 'inbox') {
+        _emails = (responseData as List)
+            .map((json) => Email.fromJson(json))
+            .toList();
+      } else if (mailbox == 'sent') {
+        _sentEmails = (responseData as List)
+            .map((json) {
+              print("start json");
+              print(json);
+              print("end json");
+              return Email.fromJson(json);
+            })
+            .toList();
+      }
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {

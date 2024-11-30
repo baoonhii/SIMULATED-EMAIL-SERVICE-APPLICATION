@@ -29,13 +29,15 @@ enum MailRoutes {
   INBOX("/inbox"),
   EMAIL_DETAIL("/emailDetail"),
   COMPOSE("/compose"),
-  NOTIF("/notif");
+  NOTIF("/notif"),
+  ;
 
   const MailRoutes(this.value);
   final String value;
 }
 
 enum MailSubroutes {
+  ROOT("mails/"),
   DRAFT("mails/drafts"),
   SENT("mails/sent"),
   STARRED("mails/starred"),
@@ -60,6 +62,7 @@ enum API_Endpoints {
   USER_DARKMODE("$API_ROOT/user/darkmode/"),
   USER_EMAIL_PREF("$API_ROOT/user/email_pref/"),
   EMAIL_SEND("$API_ROOT/email/send/"),
+  EMAIL_LIST("$API_ROOT/email_list"),
   ;
 
   const API_Endpoints(this.value);

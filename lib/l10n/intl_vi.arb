@@ -67,5 +67,7 @@
     "emailSubject": "Tiêu đề",
     "emailMessage": "Nội dung",
     "selected": "Đã chọn",
-    "files": "tập tin"
+    "files": "tập tin",
+    "sentMail": "Thư đã gửi",
+    "noSentEmails": "Không có thư đã gửi"
 }

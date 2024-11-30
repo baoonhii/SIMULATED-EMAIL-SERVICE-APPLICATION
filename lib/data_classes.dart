@@ -1,72 +1,110 @@
 // ignore_for_file: non_constant_identifier_names
 
-class Email {
-  final String mailID;
-  final String senderAddress;
-  final String receiverAddress;
-  final String contentSubject;
-  final String contentBody;
-  final DateTime timeSent;
-  bool isStarred = false;
-  bool isRead = false;
-  bool isSpam = false;
+class EmailAttachment {
+  final int file_id;
+  final String filename;
+  final String file_url;
 
-  Email({
-    required this.mailID,
-    required this.senderAddress,
-    required this.receiverAddress,
-    required this.contentSubject,
-    required this.contentBody,
-    required this.timeSent,
+  EmailAttachment({
+    required this.file_id,
+    required this.filename,
+    required this.file_url,
   });
-
-  Email copyWith({
-    String? mailID,
-    String? senderAddress,
-    String? receiverAddress,
-    String? contentSubject,
-    String? contentBody,
-    DateTime? timeSent,
-  }) {
-    return Email(
-      mailID: mailID ?? this.mailID,
-      senderAddress: senderAddress ?? this.senderAddress,
-      receiverAddress: receiverAddress ?? this.receiverAddress,
-      contentSubject: contentSubject ?? this.contentSubject,
-      contentBody: contentBody ?? this.contentBody,
-      timeSent: timeSent ?? this.timeSent,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'Mail ID: $mailID - Sent by $senderAddress @ $timeSent. Subject: $contentSubject';
-  }
 
   Map<String, dynamic> toJson() {
     return {
-      'mailID': mailID,
-      'senderAddress': senderAddress,
-      'receiverAddress': receiverAddress,
-      'contentSubject': contentSubject,
-      'contentBody': contentBody,
-      'timeSent': timeSent.toIso8601String(),
-      'isStarred': isStarred,
-      'isRead': isRead,
-      'isSpam': isSpam,
+      'id': file_id,
+      'filename': filename,
+      'file_url': file_url,
     };
   }
 
-  factory Email.fromJson(Map<String, dynamic> json) {
-    return Email(
-      mailID: json['mailID'],
-      senderAddress: json['senderAddress'],
-      receiverAddress: json['receiverAddress'],
-      contentSubject: json['contentSubject'],
-      contentBody: json['contentBody'],
-      timeSent: DateTime.parse(json['timeSent']),
+  factory EmailAttachment.fromJson(Map<String, dynamic> json) {
+    return EmailAttachment(
+      file_id: json['id'],
+      filename: json['filename'],
+      file_url: json['file_url'],
     );
   }
+}
+
+class Email {
+  final int message_id;
+  final String sender;
+  final List<String> recipients;
+  final List<String> cc;
+  final List<String> bcc;
+  final String subject;
+  final String body;
+  final List<EmailAttachment> attachments;
+  final DateTime sent_at;
+  final bool is_read;
+  final bool is_starred;
+  final bool is_draft;
+  final bool is_trashed;
+  final bool is_auto_replied;
+
+  @override
+  String toString() {
+    return 'Mail ID: $message_id - Sent by $sender @ $sent_at. Subject: $subject';
+  }
+
+  // Map<String, dynamic> toJson() {
+  //   return {
+  //     'message_id': message_id,
+  //     'sender': sender,
+  //     'recipients': recipients,
+  //     'cc': cc,
+  //     'bcc': bcc,
+  //     'subject': subject,
+  //     'body': body,
+  //     'attachments': attachments,
+  //     'sent_at': sent_at.toIso8601String(),
+  //     'is_read': is_read,
+  //     'is_starred': is_starred,
+  //     'is_draft': is_draft,
+  //     'is_trashed': is_trashed,
+  //     'is_auto_replied': is_auto_replied,
+  //   };
+  // }
+
+  factory Email.fromJson(Map<String, dynamic> json) {
+    return Email(
+      message_id: json["id"],
+      sender: json["sender"],
+      recipients: List<String>.from(json['recipients'] ?? []),
+      cc: List<String>.from(json['cc'] ?? []),
+      bcc: List<String>.from(json['bcc'] ?? []),
+      subject: json["subject"],
+      body: json["body"],
+      attachments: (json['attachments'] as List?)
+          ?.map((item) => EmailAttachment.fromJson(item))
+          .toList() ?? [],
+      sent_at: DateTime.parse(json["sent_at"]),
+      is_read: json["is_read"] ?? false,
+      is_starred: json["is_starred"] ?? false,
+      is_draft: json["is_draft"] ?? false,
+      is_trashed: json["is_trashed"] ?? false,
+      is_auto_replied: json["is_auto_replied"] ?? false,
+    );
+  }
+
+  Email({
+    required this.message_id,
+    required this.sender,
+    required this.recipients,
+    required this.cc,
+    required this.bcc,
+    required this.subject,
+    required this.body,
+    required this.attachments,
+    required this.sent_at,
+    required this.is_read,
+    required this.is_starred,
+    required this.is_draft,
+    required this.is_trashed,
+    required this.is_auto_replied,
+  });
 }
 
 class Account {

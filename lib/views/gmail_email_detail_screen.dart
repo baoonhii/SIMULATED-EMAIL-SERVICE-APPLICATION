@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import '../data_classes.dart';
 
 class GmailEmailDetailScreen extends StatelessWidget {
@@ -10,6 +12,11 @@ class GmailEmailDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(email.body);
+    final quillController = quill.QuillController(
+      document: quill.Document.fromJson(jsonDecode(email.body)),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.mailDetail),
@@ -25,7 +32,7 @@ class GmailEmailDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Subject: ${email.contentSubject}',
+              'Subject: ${email.subject}',
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -36,7 +43,7 @@ class GmailEmailDetailScreen extends StatelessWidget {
                 const Icon(Icons.person, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(
-                  'From: ${email.senderAddress}',
+                  'From: ${email.sender}',
                   style: Theme.of(context).textTheme.labelMedium!.copyWith(
                         color: Colors.grey[700],
                       ),
@@ -46,12 +53,20 @@ class GmailEmailDetailScreen extends StatelessWidget {
             const SizedBox(height: 10),
             const Divider(color: Colors.grey),
             const SizedBox(height: 10),
-            Text(
-              email.contentBody,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 16,
-                  ),
-            ),
+            quill.QuillEditor.basic(
+              controller: quillController,
+              scrollController: ScrollController(),
+              configurations: const quill.QuillEditorConfigurations(
+                scrollable: true,
+                expands: false,
+                showCursor: false,
+                padding: EdgeInsets.all(16),
+                autoFocus: false,
+              ),
+              focusNode: FocusNode(
+                canRequestFocus: false,
+              ), // FocusNode(canRequestFocus: false),
+            )
           ],
         ),
       ),

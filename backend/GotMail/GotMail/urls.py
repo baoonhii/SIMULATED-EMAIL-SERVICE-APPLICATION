@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from GotMail import settings
 from gotmail_service.views import (
     DarkModeToggleView,
+    EmailListView,
     FontSettingsView,
     LogoutView,
     RegisterView,
@@ -45,4 +46,5 @@ urlpatterns = [
     path("user/darkmode/", DarkModeToggleView.as_view(), name="api_darkmode_toggle"),
     path("user/email_pref/", FontSettingsView.as_view(), name="api_email_pref"),
     path("email/send/", SendEmailView.as_view(), name="api_send_mail"),
+    path("email_list/", EmailListView.as_view(), name="api_list_mail"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

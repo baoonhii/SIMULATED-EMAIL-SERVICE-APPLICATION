@@ -1,14 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../data_classes.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext context) {
   return ListTile(
     leading: CircleAvatar(
-      backgroundColor: _getColorForSender(email.senderAddress),
+      backgroundColor: _getColorForSender(email.sender),
       child: Text(
-        email.senderAddress[0].toUpperCase(),
+        email.sender[0].toUpperCase(),
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -21,10 +24,10 @@ ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext contex
       text: TextSpan(
         children: [
           TextSpan(
-            text: email.contentSubject,
+            text: email.subject,
             style: TextStyle(
-              fontWeight: email.isRead ? FontWeight.normal : FontWeight.bold,
-              color: email.isRead ? Colors.grey[600] : Colors.black,
+              fontWeight: email.is_read ? FontWeight.normal : FontWeight.bold,
+              color: email.is_read ? Colors.grey[600] : Colors.black,
             ),
           ),
           TextSpan(
@@ -36,7 +39,7 @@ ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext contex
             ),
           ),
           TextSpan(
-            text: email.senderAddress,
+            text: email.sender,
             style: TextStyle(
               color: Colors.grey[600],
               fontWeight: FontWeight.w300,
@@ -47,7 +50,7 @@ ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext contex
       ),
     ),
     subtitle: Text(
-      email.contentBody,
+      quill.Document.fromJson(jsonDecode(email.body)).toPlainText(),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(color: Colors.grey[700]),
@@ -57,7 +60,7 @@ ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext contex
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          _formatTimeSent(email.timeSent, context),
+          _formatTimeSent(email.sent_at, context),
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
@@ -65,8 +68,8 @@ ListTile getEmailTile(Email email, GestureTapCallback onTap, BuildContext contex
         ),
         const SizedBox(height: 4),
         Icon(
-          email.isRead ? Icons.star_border : Icons.star,
-          color: email.isRead ? Colors.grey : Colors.amber,
+          email.is_read ? Icons.star_border : Icons.star,
+          color: email.is_read ? Colors.grey : Colors.amber,
           size: 20,
         ),
       ],

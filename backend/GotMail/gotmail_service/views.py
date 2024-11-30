@@ -369,6 +369,53 @@ class SendEmailView(generics.CreateAPIView):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
+class EmailListView(generics.ListAPIView):
+    """
+    API endpoint for listing emails in different mailboxes
+    """
+
+    serializer_class = EmailSerializer
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Retrieve emails based on mailbox type
+        """
+        user = self.request.user
+        mailbox = self.request.query_params.get("mailbox", "inbox")  # Use query_params
+
+        if mailbox == "inbox":
+            # Emails received by the user (recipients, cc, bcc)
+            return (
+                Email.objects.filter(Q(recipients=user) | Q(cc=user) | Q(bcc=user))
+                .exclude(is_trashed=True)
+                .order_by("-sent_at")
+            )
+
+        elif mailbox == "sent":
+            # Emails sent by the user
+            print("Fetching emails")
+            print(Email.objects.count())
+            print(Email.objects.filter(sender=user))
+            return (
+                Email.objects.filter(sender=user)
+                .exclude(is_trashed=True)
+                .order_by("-sent_at")
+            )
+
+        elif mailbox == "draft":
+            # Drafts created by the user
+            return Email.objects.filter(sender=user, is_draft=True).order_by("-sent_at")
+
+        elif mailbox == "trash":
+            # Trashed emails
+            return Email.objects.filter(
+                Q(sender=user) | Q(recipients=user) | Q(cc=user) | Q(bcc=user),
+                is_trashed=True,
+            ).order_by("-sent_at")
+
+
 # Advanced Email Views
 class AdvancedEmailSearchView(generics.ListAPIView):
     serializer_class = EmailSerializer

@@ -10,6 +10,7 @@ import 'views/gmail_email_detail_screen.dart';
 import 'views/gmail_email_pref_screen.dart';
 import 'views/gmail_inbox_screen.dart';
 import 'views/gmail_register_screen.dart';
+import 'views/gmail_sent_mail_screen.dart';
 import 'views/notifications_screen.dart';
 import 'views/user_settings_screen.dart';
 
@@ -29,10 +30,13 @@ PageRouteBuilder getRouterManager(
       return SettingManager.redirector(context, settings.name!);
     } else if (settings.name!.startsWith(AuthRoutes.AUTHROOT.value)) {
       return LoginManager.redirector(context, settings.name!);
+    } else if (settings.name!.startsWith(MailSubroutes.ROOT.value)) {
+      return SubManager.redirector(context, settings.name!);
     }
   }
   return MainManager.redirector(context, Route404);
 }
+
 
 class Screen404 extends StatelessWidget {
   const Screen404({super.key});
@@ -64,6 +68,21 @@ class MainManager extends RouterManager {
           ),
       MailRoutes.NOTIF.value: (context) => const NotificationsScreen(),
       MailRoutes.COMPOSE.value: (context) => const EmailComposeScreen(),
+    };
+
+    WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
+    return tweenRoute(builder);
+  }
+}
+
+class SubManager extends RouterManager {
+  static PageRouteBuilder redirector(
+    BuildContext context,
+    String path, {
+    Object? arguments,
+  }) {
+    final Map<String, WidgetBuilder> routeMap = {
+      MailSubroutes.SENT.value: (context) => const GmailSentScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();

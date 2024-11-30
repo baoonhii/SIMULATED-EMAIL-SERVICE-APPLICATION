@@ -67,5 +67,7 @@
     "emailSubject": "Subject",
     "emailMessage": "Message",
     "selected": "Selected",
-    "files": "file(s)"
+    "files": "file(s)",
+    "sentMail": "Sent Mail",
+    "noSentEmails": "No sent emails"
 }

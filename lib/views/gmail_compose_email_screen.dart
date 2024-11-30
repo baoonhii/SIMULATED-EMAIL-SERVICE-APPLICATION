@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
         .where((e) => e.isNotEmpty)
         .toList();
 
-    final content = _quillController.document.toDelta().toJson().toString();
+    final content = jsonEncode(_quillController.document.toDelta().toJson());
     print(content);
 
     Provider.of<EmailComposeProvider>(context, listen: false).sendEmail(

@@ -20,7 +20,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
     super.initState();
     // Fetch emails when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<EmailsProvider>(context, listen: false).fetchMails();
+      Provider.of<EmailsProvider>(context, listen: false).fetchEmails();
     });
   }
 
