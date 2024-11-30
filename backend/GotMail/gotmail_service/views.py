@@ -97,53 +97,46 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        print("Raw Registration Data:", request.data)
+
         serializer = UserRegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
+
+        try:
+            # Use is_valid with raise_exception=True to get detailed validation errors
+            if serializer.is_valid(raise_exception=True):
                 try:
-                    validate_phone_number(request.data.get("phone_number"))
-                except ValidationError:
+                    # Create user
+                    user = serializer.save()
+
+                    # Additional post-registration actions
+                    UserProfile.objects.create(user=user)
+                    UserSettings.objects.create(user=user)
+
+                    # Create default labels
+                    default_labels = [
+                        {"name": "Important", "color": "#FF0000"},
+                        {"name": "Personal", "color": "#00FF00"},
+                        {"name": "Work", "color": "#0000FF"},
+                    ]
+                    for label_data in default_labels:
+                        Label.objects.create(user=user, **label_data)
+
+                    # Log in the user
+                    login(request, user)
+
                     return Response(
-                        {"error": "Invalid phone number format"},
-                        status=status.HTTP_400_BAD_REQUEST,
+                        UserSerializer(user).data, status=status.HTTP_201_CREATED
                     )
 
-                # Check if the phone number already exists
-                if User.objects.filter(
-                    phone_number=request.data.get("phone_number")
-                ).exists():
+                except Exception as e:
+                    print(f"User Creation Error: {e}")
                     return Response(
-                        {"error": "Phone number already registered."},
-                        status=status.HTTP_400_BAD_REQUEST,
+                        {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Create user
-                user = serializer.save()
-
-                # Create associated profile
-                UserProfile.objects.create(user=user)
-
-                # Create default settings
-                UserSettings.objects.create(user=user)
-
-                # Create default labels
-                default_labels = [
-                    {"name": "Important", "color": "#FF0000"},
-                    {"name": "Personal", "color": "#00FF00"},
-                    {"name": "Work", "color": "#0000FF"},
-                ]
-                for label_data in default_labels:
-                    Label.objects.create(user=user, **label_data)
-
-                # Log in the user
-                login(request, user)
-
-                return Response(
-                    UserSerializer(user).data, status=status.HTTP_201_CREATED
-                )
-            except ValidationError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except serializers.ValidationError as e:
+            print(f"Validation Error: {e}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):

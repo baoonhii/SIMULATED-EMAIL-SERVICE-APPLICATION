@@ -31,10 +31,10 @@ class UserSerializer(serializers.ModelSerializer):
             return (
                 obj.profile.profile_picture.url
                 if obj.profile.profile_picture
-                else "/default-avatar.png"
+                else "/user_res/profile_pictures/dog.png"
             )
         except UserProfile.DoesNotExist:
-            return "/default-avatar.png"
+            return "/user_res/profile_pictures/dog.png"
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -110,7 +110,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password",
             "password2",
         ]
-        missing_fields = [field for field in required_fields if field not in attrs]
+
+        # Check for missing fields
+        missing_fields = [field for field in required_fields if not attrs.get(field)]
+        if missing_fields:
+            raise serializers.ValidationError(
+                {"detail": f"Missing required fields: {', '.join(missing_fields)}"}
+            )
 
         # Check if passwords match
         if attrs.get("password") != attrs.get("password2"):
@@ -118,16 +124,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
                 {"password": "Password fields didn't match."}
             )
 
-        if missing_fields:
+        # Validate unique constraints
+        if User.objects.filter(phone_number=attrs.get("phone_number")).exists():
             raise serializers.ValidationError(
-                {"detail": f"Missing required fields: {', '.join(missing_fields)}"}
+                {"phone_number": "Phone number is already registered."}
             )
 
-        # Optional phone verification logic
-        if "verification_code" in attrs and attrs["verification_code"]:
-            # Add phone verification logic here
-            # For example, check against a stored verification code
-            pass
+        if User.objects.filter(email=attrs.get("email")).exists():
+            raise serializers.ValidationError({"email": "Email is already registered."})
 
         return attrs
 
@@ -136,15 +140,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         validated_data.pop("password2", None)
         validated_data.pop("verification_code", None)
 
-        # Create user with the provided details
+        # Create user with phone number as username
         user = User.objects.create_user(
-            username=validated_data[
-                "phone_number"
-            ],  # Assuming phone_number is used as username
+            username=validated_data["phone_number"],
             phone_number=validated_data["phone_number"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
-            email=validated_data["email"],  # Save email
+            email=validated_data["email"],
             password=validated_data["password"],
         )
 
@@ -211,10 +213,11 @@ class AutoReplySettingsSerializer(serializers.ModelSerializer):
 
         return data
 
+
 class FontSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSettings
-        fields = ['font_size', 'font_family']
+        fields = ["font_size", "font_family"]
 
 
 class ChangePasswordSerializer(serializers.Serializer):

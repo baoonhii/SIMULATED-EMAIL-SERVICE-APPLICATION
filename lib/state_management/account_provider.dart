@@ -135,7 +135,6 @@ class AccountProvider extends ChangeNotifier {
       method: 'POST',
       requiresAuth: false,
       body: {
-        'username': phoneNumber,
         'first_name': firstName,
         'last_name': lastName,
         'email': email,

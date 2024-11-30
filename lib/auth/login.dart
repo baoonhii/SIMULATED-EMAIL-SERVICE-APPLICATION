@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../other_widgets/general.dart';
 import '../state_management/account_provider.dart';
 import '../utils/validators.dart';
 import '../views/gmail_base_screen.dart';
@@ -86,9 +87,12 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         );
       } catch (e) {
         // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
-        );
+        if (mounted) {
+          showSnackBar(
+            context,
+            'Login failed: ${e.toString()}',
+          );
+        }
       } finally {
         setState(() {
           _isLoading = false;
