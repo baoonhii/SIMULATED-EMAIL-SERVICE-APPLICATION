@@ -56,10 +56,12 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
         body: body,
       );
 
-      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-      themeProvider.setThemeMode(value);
-
       if (mounted) {
+        final themeProvider = Provider.of<ThemeProvider>(
+          context,
+          listen: false,
+        );
+        themeProvider.setThemeMode(value);
         showSnackBar(context, AppLocalizations.of(context)!.saveSettingChanges);
       }
     } catch (e) {
@@ -136,10 +138,22 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
           ),
           Card(
             margin: const EdgeInsets.all(8),
+            child: ListTile(
+              leading: const Icon(Icons.reply, color: Colors.blue),
+              title: Text(AppLocalizations.of(context)!.emailPrefSetting),
+              subtitle: Text(AppLocalizations.of(context)!.emailPrefDesc),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, SettingsRoutes.COMPOSEPREF.value);
+              },
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.all(8),
             child: SwitchListTile(
               title: Text(AppLocalizations.of(context)!.darkModeToggle),
               secondary: const Icon(Icons.brightness_6, color: Colors.blue),
-              value: themeProvider.isDarkMode ?? false,
+              value: themeProvider.isDarkMode,
               onChanged: (value) {
                 print(value);
                 _toggleDarkMode(value);

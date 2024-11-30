@@ -8,7 +8,8 @@ enum SettingsRoutes {
   ROOT("settings/"),
   USER("settings/userSettings"),
   AUTOREP("settings/autoReply"),
-  EDITPROFILE("settings/editProfile");
+  EDITPROFILE("settings/editProfile"),
+  COMPOSEPREF("settings/composePrefs");
 
   const SettingsRoutes(this.value);
   final String value;

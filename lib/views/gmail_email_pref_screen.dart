@@ -89,15 +89,11 @@ class _EmailPrefScreenState extends State<EmailPrefScreen> {
       AppLocalizations.of(context)!.largeFont: 16,
     };
 
-    var fontSizeValueMap = fontSizeDisplayMap.map((k, v) => MapEntry(v, k));
-
     const Map<String, String> fontFamilySelectMap = {
       "Sans-serif": "sans-serif",
       "Serif": "serif",
       "Monospace": "monospace"
     };
-
-    var fontFamilyValueMap = fontFamilySelectMap.map((k, v) => MapEntry(v, k));
 
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.emailPrefSetting,
@@ -132,7 +128,7 @@ class _EmailPrefScreenState extends State<EmailPrefScreen> {
           Card(
             margin: const EdgeInsets.all(8),
             child: ListTile(
-              leading: const Icon(Icons.format_size, color: Colors.blue),
+              leading: const Icon(Icons.font_download_outlined, color: Colors.blue),
               title: Text(AppLocalizations.of(context)!.fontFamily),
               trailing: DropdownButton<String>(
                 value: _fontFamily,

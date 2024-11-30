@@ -54,6 +54,7 @@
     "errorFetchSettings": "Failed to fetch auto-reply settings",
     "errorSavingSettings": "Failed to save auto-reply settings",
     "emailPrefSetting": "Email compose settings",
+    "emailPrefDesc": "Set default font size and family",
     "fontSize": "Font size",
     "fontFamily": "Font family",
     "smallFont": "Small",

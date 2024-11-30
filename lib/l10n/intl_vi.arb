@@ -54,6 +54,7 @@
     "errorFetchSettings": "Failed to fetch auto-reply settings",
     "errorSavingSettings": "Failed to save auto-reply settings",
     "emailPrefSetting": "Cài đặt soạn thư",
+    "emailPrefDesc": "Chọn cỡ và kiểu font mặc định",
     "fontSize": "Cỡ font",
     "fontFamily": "Kiểu Font",
     "smallFont": "Nhỏ",
