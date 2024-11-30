@@ -50,7 +50,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
         'dark_mode': value,
       };
 
-      await fetchData(
+      await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_DARKMODE.value),
         method: 'PATCH',
         body: body,

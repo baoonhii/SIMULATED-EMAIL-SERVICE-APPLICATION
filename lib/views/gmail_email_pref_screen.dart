@@ -30,7 +30,7 @@ class _EmailPrefScreenState extends State<EmailPrefScreen> {
     });
 
     try {
-      final responseData = await fetchData(
+      final responseData = await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_EMAIL_PREF.value),
         method: 'GET',
       );
@@ -58,7 +58,7 @@ class _EmailPrefScreenState extends State<EmailPrefScreen> {
     };
 
     try {
-      await fetchData(
+      await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_EMAIL_PREF.value),
         method: 'PUT',
         body: body,

@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import '../other_widgets/general.dart';
 import '../other_widgets/profile_edit.dart';
 import '../state_management/account_provider.dart';
+import '../utils/other.dart';
 import 'gmail_base_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _birthdateController = TextEditingController();
 
   File? _imageFile;
-  Uint8List? _imageBytes;
+  WebAttachment? _imageWebFile;
   bool _isHovering = false;
   DateTime? _selectedBirthdate;
 
@@ -72,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (result != null) {
       setState(() {
         if (kIsWeb) {
-          _imageBytes = result.files.first.bytes;
+          _imageWebFile = WebAttachment.fromPlatformFile(result.files.first);
         } else {
           _imageFile = File(result.files.first.path!);
         }
@@ -112,7 +113,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Use `File` for mobile/desktop
         profilePicture: kIsWeb ? null : _imageFile,
         // Use `Uint8List` for web
-        profilePictureBytes: kIsWeb ? _imageBytes : null,
+        profilePictureWeb: kIsWeb ? _imageWebFile : null,
       );
 
       if (mounted) {
@@ -176,8 +177,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   MouseRegion getProfileImagePicker(Account currentAccount) {
-    var backgroundImage = _imageBytes != null
-        ? MemoryImage(_imageBytes!) // For web
+    var backgroundImage = _imageWebFile != null
+        ? MemoryImage(_imageWebFile!.bytes) // For web
         : _imageFile != null
             ? FileImage(_imageFile!) // For mobile/desktop
             : getImageFromAccount(currentAccount);

@@ -9,6 +9,8 @@ import '../state_management/email_compose_provider.dart';
 import '../constants.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
+import '../utils/other.dart';
+
 class EmailComposeScreen extends StatefulWidget {
   const EmailComposeScreen({super.key});
 
@@ -21,11 +23,10 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
   final _ccController = TextEditingController();
   final _bccController = TextEditingController();
   final _subjectController = TextEditingController();
-  final _bodyController = TextEditingController();
 
   final _quillController = quill.QuillController.basic();
 
-  List<dynamic> _attachments = [];
+  final List<dynamic> _attachments = [];
 
   @override
   void initState() {
@@ -42,12 +43,9 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
       setState(() {
         if (kIsWeb) {
           // For web, convert PlatformFile to custom WebAttachment
-          _attachments.addAll(result.files
-              .map((platformFile) => WebAttachment(
-                    name: platformFile.name,
-                    bytes: platformFile.bytes!,
-                  ))
-              .toList());
+          _attachments.addAll(
+            result.files.map(WebAttachment.fromPlatformFile).toList(),
+          );
         } else {
           // For mobile/desktop, use File paths as before
           _attachments.addAll(result.paths.map((path) => File(path!)).toList());

@@ -11,7 +11,7 @@ class ThemeProvider with ChangeNotifier {
 
   Future<void> fetchDarkModeSetting() async {
     try {
-      final responseData = await fetchData(
+      final responseData = await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_DARKMODE.value),
         method: 'GET',
       );

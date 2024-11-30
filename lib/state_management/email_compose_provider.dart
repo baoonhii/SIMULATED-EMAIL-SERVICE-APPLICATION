@@ -5,13 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import '../constants.dart';
-
-class WebAttachment {
-  final String name;
-  final Uint8List bytes;
-
-  WebAttachment({required this.name, required this.bytes});
-}
+import '../utils/api_pipeline.dart';
+import '../utils/other.dart';
 
 class EmailComposeProvider extends ChangeNotifier {
   bool _isLoading = false;
@@ -31,10 +26,7 @@ class EmailComposeProvider extends ChangeNotifier {
     List<dynamic>? attachments,
   }) async {
     // Reset state completely
-    _isLoading = true;
-    _errorMessage = null;
-    _isSuccess = false;
-    notifyListeners();
+    reset();
 
     try {
       // Prepare multipart request
@@ -43,44 +35,33 @@ class EmailComposeProvider extends ChangeNotifier {
         Uri.parse(API_Endpoints.EMAIL_SEND.value),
       );
 
-      // Add text fields
-      request.fields['recipients'] = json.encode(recipients);
-      if (ccRecipients != null) {
-        request.fields['cc'] = json.encode(ccRecipients);
-      }
-      if (bccRecipients != null) {
-        request.fields['bcc'] = json.encode(bccRecipients);
-      }
-      request.fields['subject'] = subject;
-      request.fields['body'] = body;
+      processEmailFields(
+        request,
+        recipients,
+        ccRecipients,
+        bccRecipients,
+        subject,
+        body,
+      );
 
-      var uuid = Uuid();
+      var uuid = const Uuid();
 
       // Add attachments
       if (attachments != null) {
         for (var file in attachments) {
-          final split = file.name.split('.');
-          String baseName = split.first;
-          String extension = split.last;
-          final filename = '$baseName-${uuid.v4()}.$extension';
+          final filename = getRandomizedName(file.name, uuid);
           if (kIsWeb && file is WebAttachment) {
             // For web, use MultipartFile.fromBytes
             request.files.add(
-              http.MultipartFile.fromBytes(
+              await webfileToHTTP(
+                file,
                 'attachments',
-                file.bytes,
-                filename: filename,
+                filename,
               ),
             );
           } else if (!kIsWeb && file is File) {
             // Existing file path logic for mobile/desktop
-            request.files.add(
-              await http.MultipartFile.fromPath(
-                'attachments',
-                file.path,
-                filename: filename,
-              ),
-            );
+            request.files.add(await fileToHTTP(file, 'attachments', filename));
           }
         }
       }
@@ -110,6 +91,25 @@ class EmailComposeProvider extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  void processEmailFields(
+    http.MultipartRequest request,
+    List<String> recipients,
+    List<String>? ccRecipients,
+    List<String>? bccRecipients,
+    String subject,
+    String body,
+  ) {
+    request.fields['recipients'] = json.encode(recipients);
+    if (ccRecipients != null) {
+      request.fields['cc'] = json.encode(ccRecipients);
+    }
+    if (bccRecipients != null) {
+      request.fields['bcc'] = json.encode(bccRecipients);
+    }
+    request.fields['subject'] = subject;
+    request.fields['body'] = body;
   }
 
   void markNavigatedAfterSuccess() {

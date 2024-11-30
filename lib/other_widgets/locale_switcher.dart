@@ -3,7 +3,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../state_management/locale_provider.dart';
 
-// Define constants for locales
 const Locale localeEN = Locale('en');
 const Locale localeVI = Locale('vi');
 const TextStyle dropdownTextStyle = TextStyle(

@@ -119,10 +119,11 @@ class UserProfile {
   final String? birthdate;
   final bool two_factor_enabled;
 
-  UserProfile(
-      {required this.bio,
-      required this.birthdate,
-      required this.two_factor_enabled});
+  UserProfile({
+    required this.bio,
+    required this.birthdate,
+    required this.two_factor_enabled,
+  });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(

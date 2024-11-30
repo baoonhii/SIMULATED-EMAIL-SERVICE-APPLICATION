@@ -1,12 +1,12 @@
 import 'dart:io';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+
 import '../constants.dart';
 import '../data_classes.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../utils/api_pipeline.dart';
+import '../utils/other.dart';
 
 class AccountProvider extends ChangeNotifier {
   Account? _currentAccount;
@@ -32,7 +32,7 @@ class AccountProvider extends ChangeNotifier {
   }
 
   Future<void> fetchUserProfile() async {
-    final responseData = await fetchData(
+    final responseData = await makeAPIRequest(
       url: Uri.parse(API_Endpoints.USER_PROFILE.value),
       method: 'GET',
     );
@@ -65,7 +65,7 @@ class AccountProvider extends ChangeNotifier {
     if (storedToken == null) return false;
 
     try {
-      final responseData = await fetchData(
+      final responseData = await makeAPIRequest(
         url: Uri.parse(API_Endpoints.AUTH_VALIDATE_TOKEN.value),
         method: 'POST',
         requiresAuth: false,
@@ -86,7 +86,7 @@ class AccountProvider extends ChangeNotifier {
     String password,
     VoidCallback onSuccess,
   ) async {
-    final responseData = await fetchData(
+    final responseData = await makeAPIRequest(
       url: Uri.parse(API_Endpoints.AUTH_LOGIN.value),
       method: 'POST',
       requiresAuth: false,
@@ -111,7 +111,7 @@ class AccountProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      await fetchData(
+      await makeAPIRequest(
         url: Uri.parse(API_Endpoints.AUTH_LOGOUT.value),
         method: 'POST',
       );
@@ -130,7 +130,7 @@ class AccountProvider extends ChangeNotifier {
     required String password,
     required String password2,
   }) async {
-    await fetchData(
+    await makeAPIRequest(
       url: Uri.parse(API_Endpoints.AUTH_REGISTER.value),
       method: 'POST',
       requiresAuth: false,
@@ -152,7 +152,7 @@ class AccountProvider extends ChangeNotifier {
     String? bio,
     DateTime? birthdate,
     File? profilePicture,
-    Uint8List? profilePictureBytes,
+    WebAttachment? profilePictureWeb,
   }) async {
     // Prepare fields
     final fields = {
@@ -166,15 +166,15 @@ class AccountProvider extends ChangeNotifier {
 
     // Perform file upload or regular update
     final responseData =
-        await (profilePicture != null || profilePictureBytes != null
+        await (profilePicture != null || profilePictureWeb != null
             ? uploadImage(
                 url: Uri.parse(API_Endpoints.USER_PROFILE.value),
                 fields: fields,
                 fileToUpload: profilePicture,
-                fileBytes: profilePictureBytes,
+                fileWeb: profilePictureWeb,
                 fileFieldName: 'profile_picture',
               )
-            : fetchData(
+            : makeAPIRequest(
                 url: Uri.parse(API_Endpoints.USER_PROFILE.value),
                 method: 'PUT',
                 body: fields,

@@ -35,7 +35,7 @@ class _AutoReplySettingsScreenState extends State<AutoReplySettingsScreen> {
     });
 
     try {
-      final responseData = await fetchData(
+      final responseData = await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_AUTO_REPLY.value),
         method: 'GET',
       );
@@ -86,7 +86,7 @@ class _AutoReplySettingsScreenState extends State<AutoReplySettingsScreen> {
     };
 
     try {
-      await fetchData(
+      await makeAPIRequest(
         url: Uri.parse(API_Endpoints.USER_AUTO_REPLY.value),
         method: 'PUT',
         body: body,

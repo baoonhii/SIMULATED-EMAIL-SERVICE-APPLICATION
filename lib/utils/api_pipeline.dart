@@ -1,14 +1,11 @@
 import 'dart:convert';
-
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:uuid/uuid.dart';
+import 'other.dart';
 
-Future<dynamic> fetchData({
+Future<dynamic> makeAPIRequest({
   required Uri url,
   required String method,
   Map<String, String>? headers,
@@ -76,12 +73,36 @@ Future<dynamic> fetchData({
   }
 }
 
+Future<http.MultipartFile> webfileToHTTP(
+  WebAttachment webFile,
+  String field,
+  String filename,
+) async {
+  return http.MultipartFile.fromBytes(
+    field,
+    webFile.bytes,
+    filename: filename,
+  );
+}
+
+Future<http.MultipartFile> fileToHTTP(
+  File file,
+  String field,
+  String filename,
+) async {
+  return http.MultipartFile.fromPath(
+    field,
+    file.path,
+    filename: filename,
+  );
+}
+
 // Multipart file upload method
 Future<dynamic> uploadImage({
   required Uri url,
   required Map<String, String> fields,
   File? fileToUpload,
-  Uint8List? fileBytes,
+  WebAttachment? fileWeb,
   String fileFieldName = 'file',
 }) async {
   try {
@@ -98,18 +119,21 @@ Future<dynamic> uploadImage({
 
     // Add file
     if (fileToUpload != null) {
-      request.files.add(await http.MultipartFile.fromPath(
-        fileFieldName,
-        fileToUpload.path,
-        filename: '${uuid.v4()}.jpg',
-      ));
-    } else if (fileBytes != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        fileFieldName,
-        fileBytes,
-        filename: '${uuid.v4()}.jpg',
-        contentType: MediaType('image', 'jpeg'),
-      ));
+      request.files.add(
+        await fileToHTTP(
+          fileToUpload,
+          fileFieldName,
+          getRandomizedName(fileToUpload.path, uuid, keepBaseName: false),
+        ),
+      );
+    } else if (fileWeb != null) {
+      request.files.add(
+        await webfileToHTTP(
+          fileWeb,
+          fileFieldName,
+          getRandomizedName(fileWeb.name, uuid, keepBaseName: false),
+        ),
+      );
     }
 
     // Send the request
