@@ -3,10 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../other_widgets/general.dart';
 import '../state_management/email_compose_provider.dart';
 import '../constants.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 class EmailComposeScreen extends StatefulWidget {
   const EmailComposeScreen({super.key});
@@ -21,6 +22,8 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
   final _bccController = TextEditingController();
   final _subjectController = TextEditingController();
   final _bodyController = TextEditingController();
+
+  final _quillController = quill.QuillController.basic();
 
   List<dynamic> _attachments = [];
 
@@ -39,18 +42,24 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
       setState(() {
         if (kIsWeb) {
           // For web, convert PlatformFile to custom WebAttachment
-          _attachments = result.files
+          _attachments.addAll(result.files
               .map((platformFile) => WebAttachment(
                     name: platformFile.name,
                     bytes: platformFile.bytes!,
                   ))
-              .toList();
+              .toList());
         } else {
           // For mobile/desktop, use File paths as before
-          _attachments = result.paths.map((path) => File(path!)).toList();
+          _attachments.addAll(result.paths.map((path) => File(path!)).toList());
         }
       });
     }
+  }
+
+  void _removeAttachment(int index) {
+    setState(() {
+      _attachments.removeAt(index);
+    });
   }
 
   void _sendEmail() {
@@ -73,12 +82,15 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
         .where((e) => e.isNotEmpty)
         .toList();
 
+    final content = _quillController.document.toDelta().toJson().toString();
+    print(content);
+
     Provider.of<EmailComposeProvider>(context, listen: false).sendEmail(
       recipients: recipients,
       ccRecipients: cc.isNotEmpty ? cc : null,
       bccRecipients: bcc.isNotEmpty ? bcc : null,
       subject: _subjectController.text,
-      body: _bodyController.text,
+      body: content,
       attachments: _attachments.isNotEmpty ? _attachments : null,
     );
   }
@@ -87,7 +99,7 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Compose Email'),
+        title: Text(AppLocalizations.of(context)!.composeMail),
         actions: [
           IconButton(
             icon: const Icon(Icons.send),
@@ -97,17 +109,14 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
       ),
       body: Consumer<EmailComposeProvider>(
         builder: (context, composeProvider, child) {
-          print('EmailComposeScreen: isLoading: ${composeProvider.isLoading}');
-          print('EmailComposeScreen: isSuccess: ${composeProvider.isSuccess}');
-          print(
-              'EmailComposeScreen: errorMessage: ${composeProvider.errorMessage}');
           if (composeProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (composeProvider.isSuccess) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              showSnackBar(context, 'Email sent successfully!');
+              showSnackBar(
+                  context, AppLocalizations.of(context)!.emailSentSuccess);
               // Mark that we've navigated after success
               composeProvider.markNavigatedAfterSuccess();
               Navigator.of(context)
@@ -128,41 +137,76 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
                 children: [
                   TextField(
                     controller: _recipientsController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'To',
-                      hintText: 'Comma-separated email addresses',
+                      hintText:
+                          AppLocalizations.of(context)!.hintCommaSepEmailAddrs,
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _ccController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'CC',
-                      hintText: 'Comma-separated email addresses (Optional)',
+                      hintText:
+                          '${AppLocalizations.of(context)!.hintCommaSepEmailAddrs} (${AppLocalizations.of(context)!.optional})',
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _bccController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'BCC',
-                      hintText: 'Comma-separated email addresses (Optional)',
+                      hintText:
+                          '${AppLocalizations.of(context)!.hintCommaSepEmailAddrs} (${AppLocalizations.of(context)!.optional})',
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _subjectController,
-                    decoration: const InputDecoration(
-                      labelText: 'Subject',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.emailSubject,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  TextField(
-                    controller: _bodyController,
-                    maxLines: 10,
-                    decoration: const InputDecoration(
-                      labelText: 'Message',
-                      border: OutlineInputBorder(),
+                  quill.QuillToolbar.simple(
+                    controller: _quillController,
+                    configurations:
+                        const quill.QuillSimpleToolbarConfigurations(
+                      showFontFamily: true,
+                      showFontSize: true,
+                      showAlignmentButtons: true,
+                      showBoldButton: true,
+                      showItalicButton: true,
+                      showUnderLineButton: true,
+                      showStrikeThrough: true,
+                      fontFamilyValues: {
+                        "Monospace": "monospace",
+                        "Serif": "serif",
+                        "Sans Serif": "sans-serif",
+                        "Ibarra real nova": "ibarra-real-nova",
+                        "SquarePeg": "square-peg",
+                        "Nunito": "nunito",
+                        "Pacifico": "pacifico",
+                        "Roboto Mono": "roboto-mono",
+                      },
+                    ),
+                  ),
+                  Container(
+                    height: 300,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: quill.QuillEditor(
+                      controller: _quillController,
+                      scrollController: ScrollController(),
+                      focusNode: FocusNode(),
+                      configurations: const quill.QuillEditorConfigurations(
+                        scrollable: true,
+                        expands: true,
+                        padding: EdgeInsets.all(8.0),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -171,15 +215,36 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
                       ElevatedButton.icon(
                         onPressed: _pickAttachments,
                         icon: const Icon(Icons.attach_file),
-                        label: const Text('Add Attachments'),
+                        label: Text(
+                          AppLocalizations.of(context)!.addAttachments,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '${_attachments.length} file(s) selected',
+                        '${AppLocalizations.of(context)!.selected}: ${_attachments.length} ${AppLocalizations.of(context)!.files}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  if (_attachments.isNotEmpty)
+                    Column(
+                      children: _attachments.asMap().entries.map((entry) {
+                        int idx = entry.key;
+                        dynamic attachment = entry.value;
+                        String name = kIsWeb
+                            ? (attachment as WebAttachment).name
+                            : (attachment as File).path.split('/').last;
+                        return ListTile(
+                          leading: const Icon(Icons.attachment),
+                          title: Text(name),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.remove_circle),
+                            onPressed: () => _removeAttachment(idx),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                 ],
               ),
             ),

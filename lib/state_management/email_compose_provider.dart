@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import '../constants.dart';
 
@@ -16,7 +17,6 @@ class EmailComposeProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isSuccess = false;
-  bool _hasNavigatedAfterSuccess = false;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -34,7 +34,6 @@ class EmailComposeProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     _isSuccess = false;
-    _hasNavigatedAfterSuccess = false;
     notifyListeners();
 
     try {
@@ -55,16 +54,22 @@ class EmailComposeProvider extends ChangeNotifier {
       request.fields['subject'] = subject;
       request.fields['body'] = body;
 
+      var uuid = Uuid();
+
       // Add attachments
       if (attachments != null) {
         for (var file in attachments) {
+          final split = file.name.split('.');
+          String baseName = split.first;
+          String extension = split.last;
+          final filename = '$baseName-${uuid.v4()}.$extension';
           if (kIsWeb && file is WebAttachment) {
             // For web, use MultipartFile.fromBytes
             request.files.add(
               http.MultipartFile.fromBytes(
                 'attachments',
                 file.bytes,
-                filename: file.name,
+                filename: filename,
               ),
             );
           } else if (!kIsWeb && file is File) {
@@ -73,6 +78,7 @@ class EmailComposeProvider extends ChangeNotifier {
               await http.MultipartFile.fromPath(
                 'attachments',
                 file.path,
+                filename: filename,
               ),
             );
           }
@@ -108,7 +114,6 @@ class EmailComposeProvider extends ChangeNotifier {
 
   void markNavigatedAfterSuccess() {
     _isSuccess = false;
-    _hasNavigatedAfterSuccess = true;
     notifyListeners();
   }
 

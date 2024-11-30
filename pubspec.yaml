@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  flutter_quill: ^10.8.5
   http: ^1.2.2
   http_parser: ^4.0.2
   image_picker: ^1.1.2
@@ -32,6 +33,31 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  fonts:
+  - family: monospace
+    fonts:
+      - asset: assets/fonts/IBMPlexMono-Regular.ttf
+  - family: serif
+    fonts:
+      - asset: assets/fonts/RobotoSerif_28pt-Regular.ttf
+  - family: sans-serif
+    fonts:
+      - asset: assets/fonts/Roboto-Regular.ttf
+  - family: ibarra-real-nova
+    fonts:
+        - asset: assets/fonts/IbarraRealNova-Regular.ttf
+  - family: square-peg
+    fonts:
+      - asset: assets/fonts/SquarePeg-Regular.ttf
+  - family: nunito
+    fonts:
+      - asset: assets/fonts/Nunito-Regular.ttf
+  - family: pacifico
+    fonts:
+      - asset: assets/fonts/Pacifico-Regular.ttf
+  - family: roboto-mono
+    fonts:
+      - asset: assets/fonts/RobotoMono-Regular.ttf
 
 assets:
   - assets/placeholder.jpg

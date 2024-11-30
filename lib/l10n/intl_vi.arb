@@ -59,5 +59,13 @@
     "fontFamily": "Kiểu Font",
     "smallFont": "Nhỏ",
     "mediumFont": "Trung",
-    "largeFont": "Lớn"
+    "largeFont": "Lớn",
+    "hintCommaSepEmailAddrs": "Phân biệt địa chỉ bằng dấu phẩy",
+    "optional": "Không bắt buộc",
+    "emailSentSuccess": "Gửi thư thành công!",
+    "addAttachments": "Thêm tập tin",
+    "emailSubject": "Tiêu đề",
+    "emailMessage": "Nội dung",
+    "selected": "Đã chọn",
+    "files": "tập tin"
 }

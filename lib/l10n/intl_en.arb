@@ -59,5 +59,13 @@
     "fontFamily": "Font family",
     "smallFont": "Small",
     "mediumFont": "Medium",
-    "largeFont": "Large"
+    "largeFont": "Large",
+    "hintCommaSepEmailAddrs": "Comma-separated email addresses",
+    "optional": "Optional",
+    "emailSentSuccess": "Email sent successfully!",
+    "addAttachments": "Add attachments",
+    "emailSubject": "Subject",
+    "emailMessage": "Message",
+    "selected": "Selected",
+    "files": "file(s)"
 }
