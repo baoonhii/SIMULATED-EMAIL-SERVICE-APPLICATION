@@ -106,11 +106,18 @@ class _AutoReplySettingsScreenState extends State<AutoReplySettingsScreen> {
 
   // Date picker for start and end dates
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    DateTime initialDate = isStartDate
+        ? (_startDate ?? DateTime.now())
+        : (_endDate ?? DateTime.now());
+
+    // Ensure the initial date is not in the past
+    if (initialDate.isBefore(DateTime.now())) {
+      initialDate = DateTime.now();
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate
-          ? (_startDate ?? DateTime.now())
-          : (_endDate ?? DateTime.now()),
+      initialDate: initialDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
