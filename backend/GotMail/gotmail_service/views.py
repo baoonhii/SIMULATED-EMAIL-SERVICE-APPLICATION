@@ -344,17 +344,28 @@ class DarkModeToggleView(BaseUserSettingsView):
 
 
 class SendEmailView(generics.CreateAPIView):
+    """
+    API endpoint for sending emails
+    """
+
     serializer_class = CreateEmailSerializer
     authentication_classes = [SessionTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        """
+        Handle email creation and send
+        """
+        print(request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Create the email
         email = serializer.save()
 
-        # Use the EmailSerializer to serialize the created email
-        response_serializer = EmailSerializer(email)
+        # Serialize the response using the full email serializer
+        response_serializer = EmailSerializer(email, context={"request": request})
+
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 

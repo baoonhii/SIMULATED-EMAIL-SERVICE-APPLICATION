@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'state_management/account_provider.dart';
+import 'state_management/email_compose_provider.dart';
 import 'state_management/email_provider.dart';
 import 'state_management/locale_provider.dart';
 import 'manager.dart';
@@ -21,6 +22,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => EmailsProvider()),
         ChangeNotifierProvider(create: (context) => AccountProvider()),
         ChangeNotifierProvider(create: (context) => themeProvider),
+        ChangeNotifierProvider(create: (context) => EmailComposeProvider()),
         // Add other providers here in the future
       ],
       child: const MyApp(),

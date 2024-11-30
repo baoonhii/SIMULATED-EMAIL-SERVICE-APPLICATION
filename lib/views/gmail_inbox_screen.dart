@@ -49,7 +49,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
           }
 
           if (emailsProvider.emails.isEmpty) {
-            return Center(child: Text("Inbox is empty"));
+            return const Center(child: Text("Inbox is empty"));
           }
 
           return ListView.builder(

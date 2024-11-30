@@ -7,7 +7,7 @@ import magic
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
-
+import json
 
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
@@ -337,36 +337,11 @@ class EmailSerializer(serializers.ModelSerializer):
 
 
 class CreateEmailSerializer(serializers.ModelSerializer):
-    recipients = serializers.ListField(child=serializers.EmailField(), write_only=True)
-    cc = serializers.ListField(
-        child=serializers.EmailField(), write_only=True, required=False
-    )
-    bcc = serializers.ListField(
-        child=serializers.EmailField(), write_only=True, required=False
-    )
+    recipients = serializers.JSONField(write_only=True)
+    cc = serializers.JSONField(write_only=True, required=False, allow_null=True)
+    bcc = serializers.JSONField(write_only=True, required=False, allow_null=True)
     attachments = serializers.ListField(
-        child=serializers.FileField(
-            validators=[
-                FileExtensionValidator(
-                    [
-                        "pdf",
-                        "doc",
-                        "docx",
-                        "txt",
-                        "jpg",
-                        "jpeg",
-                        "png",
-                        "gif",
-                        "xlsx",
-                        "xls",
-                    ]
-                )
-            ]
-        ),
-        required=False,
-    )
-    labels = serializers.PrimaryKeyRelatedField(
-        queryset=Label.objects.all(), many=True, required=False
+        child=serializers.FileField(required=False), required=False
     )
 
     class Meta:
@@ -379,56 +354,90 @@ class CreateEmailSerializer(serializers.ModelSerializer):
             "body",
             "attachments",
             "is_draft",
-            "labels",
         ]
 
-    def validate_attachments(self, value):
-        # Additional attachment validation
-        for attachment in value:
-            # File size limit (10MB per file)
-            if attachment.size > 10 * 1024 * 1024:
-                raise serializers.ValidationError(
-                    f"File {attachment.name} exceeds 10MB size limit."
-                )
-        return value
+    def validate(self, attrs):
+        # Ensure recipients are valid email addresses
+        recipients = attrs.get("recipients", [])
+        if not isinstance(recipients, list):
+            try:
+                # Try parsing if it's a JSON string
+                recipients = json.loads(recipients)
+            except (TypeError, json.JSONDecodeError):
+                raise serializers.ValidationError("Invalid recipients format")
+
+        attrs["recipients"] = recipients
+
+        # Optional: Validate CC and BCC similarly
+        if "cc" in attrs and attrs["cc"]:
+            cc = attrs["cc"]
+            if not isinstance(cc, list):
+                try:
+                    cc = json.loads(cc)
+                except (TypeError, json.JSONDecodeError):
+                    raise serializers.ValidationError("Invalid CC format")
+            attrs["cc"] = cc
+
+        if "bcc" in attrs and attrs["bcc"]:
+            bcc = attrs["bcc"]
+            if not isinstance(bcc, list):
+                try:
+                    bcc = json.loads(bcc)
+                except (TypeError, json.JSONDecodeError):
+                    raise serializers.ValidationError("Invalid BCC format")
+            attrs["bcc"] = bcc
+
+        return attrs
 
     def create(self, validated_data):
         with transaction.atomic():
+            # Extract related data
             recipients_emails = validated_data.pop("recipients", [])
             cc_emails = validated_data.pop("cc", [])
             bcc_emails = validated_data.pop("bcc", [])
             attachments = validated_data.pop("attachments", [])
-            labels = validated_data.pop("labels", [])
 
             # Get the currently authenticated user as the sender
             sender = self.context["request"].user
 
             # Convert email addresses to User instances
             recipients = User.objects.filter(email__in=recipients_emails)
-            cc = User.objects.filter(email__in=cc_emails)
-            bcc = User.objects.filter(email__in=bcc_emails)
+            cc = (
+                User.objects.filter(email__in=cc_emails)
+                if cc_emails
+                else User.objects.none()
+            )
+            bcc = (
+                User.objects.filter(email__in=bcc_emails)
+                if bcc_emails
+                else User.objects.none()
+            )
 
             # Validate recipients
             if len(recipients) != len(recipients_emails):
                 raise serializers.ValidationError(
                     {"recipients": "One or more recipient emails are invalid."}
                 )
+
             if cc_emails and len(cc) != len(cc_emails):
                 raise serializers.ValidationError(
                     {"cc": "One or more CC emails are invalid."}
                 )
+
             if bcc_emails and len(bcc) != len(bcc_emails):
                 raise serializers.ValidationError(
                     {"bcc": "One or more BCC emails are invalid."}
                 )
 
-            # Create email with the sender
+            # Create email
             email = Email.objects.create(sender=sender, **validated_data)
 
             # Set recipients, cc, and bcc
             email.recipients.set(recipients)
-            email.cc.set(cc)
-            email.bcc.set(bcc)
+            if cc_emails:
+                email.cc.set(cc)
+            if bcc_emails:
+                email.bcc.set(bcc)
 
             # Handle attachments
             if attachments:
@@ -440,11 +449,7 @@ class CreateEmailSerializer(serializers.ModelSerializer):
                     )
                     email.attachments.add(attachment)
 
-            # Set labels
-            if labels:
-                email.labels.set(labels)
-
-        return email
+            return email
 
 
 class EmailDetailSerializer(

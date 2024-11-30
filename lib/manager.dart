@@ -5,6 +5,7 @@ import 'auth/login.dart';
 import 'constants.dart';
 import 'views/auto_reply_settings_screen.dart';
 import 'views/edit_profile_screen.dart';
+import 'views/gmail_compose_email_screen.dart';
 import 'views/gmail_email_detail_screen.dart';
 import 'views/gmail_email_pref_screen.dart';
 import 'views/gmail_inbox_screen.dart';
@@ -62,6 +63,7 @@ class MainManager extends RouterManager {
             email: arguments as Email,
           ),
       MailRoutes.NOTIF.value: (context) => const NotificationsScreen(),
+      MailRoutes.COMPOSE.value: (context) => const EmailComposeScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();

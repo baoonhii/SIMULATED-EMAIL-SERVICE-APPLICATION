@@ -59,6 +59,7 @@ enum API_Endpoints {
   USER_AUTO_REPLY("$API_ROOT/user/auto_rep/"),
   USER_DARKMODE("$API_ROOT/user/darkmode/"),
   USER_EMAIL_PREF("$API_ROOT/user/email_pref/"),
+  EMAIL_SEND("$API_ROOT/email/send/"),
   ;
 
   const API_Endpoints(this.value);
