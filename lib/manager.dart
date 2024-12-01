@@ -5,6 +5,8 @@ import 'data_classes.dart';
 import 'auth/login.dart';
 import 'views/gmail_inbox_screen.dart';
 import 'views/edit_profile_screen.dart';
+import 'views/gmail_trash_mail_screen.dart';
+import 'views/label_settings_screen.dart';
 import 'views/notifications_screen.dart';
 import 'views/user_settings_screen.dart';
 import 'views/gmail_register_screen.dart';
@@ -36,7 +38,6 @@ PageRouteBuilder getRouterManager(
   }
   return MainManager.redirector(context, Route404);
 }
-
 
 class Screen404 extends StatelessWidget {
   const Screen404({super.key});
@@ -83,6 +84,7 @@ class SubManager extends RouterManager {
   }) {
     final Map<String, WidgetBuilder> routeMap = {
       MailSubroutes.SENT.value: (context) => const GmailSentScreen(),
+      MailSubroutes.TRASH.value: (context) => const GmailTrashScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
@@ -100,9 +102,11 @@ class SettingManager extends RouterManager {
   }) {
     final Map<String, WidgetBuilder> routeMap = {
       SettingsRoutes.USER.value: (context) => const UserSettingsScreen(),
-      SettingsRoutes.AUTOREP.value: (context) => const AutoReplySettingsScreen(),
+      SettingsRoutes.AUTOREP.value: (context) =>
+          const AutoReplySettingsScreen(),
       SettingsRoutes.EDITPROFILE.value: (context) => const EditProfileScreen(),
       SettingsRoutes.COMPOSEPREF.value: (context) => const EmailPrefScreen(),
+      SettingsRoutes.LABELS.value: (context) => const LabelManagementScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();

@@ -8,28 +8,28 @@ import '../constants.dart';
 import '../other_widgets/email.dart';
 import '../state_management/email_provider.dart';
 
-class GmailSentScreen extends StatefulWidget {
-  const GmailSentScreen({super.key});
+class GmailTrashScreen extends StatefulWidget {
+  const GmailTrashScreen({super.key});
 
   @override
-  State<GmailSentScreen> createState() => _GmailSentScreenState();
+  State<GmailTrashScreen> createState() => _GmailTrashScreenState();
 }
 
-class _GmailSentScreenState extends State<GmailSentScreen> {
+class _GmailTrashScreenState extends State<GmailTrashScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<EmailsProvider>(context, listen: false)
-          .fetchEmails(mailbox: 'sent');
+          .fetchEmails(mailbox: 'trash');
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return GmailBaseScreen(
-      title: AppLocalizations.of(context)!.sentMail,
-      body: Consumer<EmailsProvider>(builder: getSentMailBuilder),
+      title: AppLocalizations.of(context)!.trashMail,
+      body: Consumer<EmailsProvider>(builder: getTrashMailBuilder),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, MailRoutes.COMPOSE.value);
@@ -40,7 +40,7 @@ class _GmailSentScreenState extends State<GmailSentScreen> {
     );
   }
 
-  Widget getSentMailBuilder(
+  Widget getTrashMailBuilder(
     BuildContext context,
     EmailsProvider emailsProvider,
     Widget? child,
@@ -51,15 +51,15 @@ class _GmailSentScreenState extends State<GmailSentScreen> {
     if (emailsProvider.hasError) {
       return Center(child: Text(emailsProvider.errorMessage));
     }
-    if (emailsProvider.sentEmails.isEmpty) {
+    if (emailsProvider.trashedEmails.isEmpty) {
       return Center(
-        child: Text(AppLocalizations.of(context)!.noSentEmails),
+        child: Text(AppLocalizations.of(context)!.noTrashedEmails),
       );
     }
     return ListView.builder(
-      itemCount: emailsProvider.sentEmails.length,
+      itemCount: emailsProvider.trashedEmails.length,
       itemBuilder: (context, index) {
-        final email = emailsProvider.sentEmails[index];
+        final email = emailsProvider.trashedEmails[index];
         return getEmailTile(
           email,
           () {

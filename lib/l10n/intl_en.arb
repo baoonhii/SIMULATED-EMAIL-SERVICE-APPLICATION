@@ -69,5 +69,19 @@
     "selected": "Selected",
     "files": "file(s)",
     "sentMail": "Sent Mail",
-    "noSentEmails": "No sent emails"
+    "noSentEmails": "No sent emails",
+    "labelManagement": "Labels management",
+    "trashMail": "Trash Mail",
+    "trash": "Trash",
+    "noTrashedEmails": "No sent emails",
+    "createLabel": "Create label",
+    "editLabel": "Edit label",
+    "labelName": "Label name",
+    "cancel": "Cancel",
+    "labelCreated": "Label created successfully",
+    "labelUpdated": "Label updated successfully",
+    "labelDeleted": "Label deleted successfully",
+    "delete": "Delete",
+    "deleteLabel": "Delete label",
+    "deleteConfirmation": "This is irreversible"
 }

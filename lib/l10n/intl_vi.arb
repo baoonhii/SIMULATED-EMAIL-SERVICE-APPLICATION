@@ -69,5 +69,19 @@
     "selected": "Đã chọn",
     "files": "tập tin",
     "sentMail": "Thư đã gửi",
-    "noSentEmails": "Không có thư đã gửi"
+    "noSentEmails": "Không có thư đã gửi",
+    "labelManagement": "Quản lý nhãn",
+    "trashMail": "Xóa thư",
+    "trash": "Thư đã xóa",
+    "noTrashedEmails": "No trashed emails",
+    "createLabel": "Tạo nhãn",
+    "editLabel": "Chỉnh sửa nhãn",
+    "labelName": "Tên nhãn",
+    "cancel": "Hủy",
+    "labelCreated": "Tạo nhãn thành công",
+    "labelUpdated": "Cập nhật nhãn thành công",
+    "labelDeleted": "Xóa nhãn thành công",
+    "delete": "Xóa",
+    "deleteLabel": "Xóa nhãn",
+    "deleteConfirmation": "Hành động này không thể hoàn lại"
 }

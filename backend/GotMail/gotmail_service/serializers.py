@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import transaction
 import json
 
+
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
     is_phone_verified = serializers.BooleanField(read_only=True)
@@ -272,18 +273,6 @@ class AttachmentSerializer(serializers.ModelSerializer):
         return None
 
 
-class LabelSerializer(serializers.ModelSerializer):
-    # Add a count of emails associated with this label
-    email_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Label
-        fields = ["id", "name", "color", "email_count"]  # Add email_count field
-
-    def get_email_count(self, obj):
-        return obj.emails.count()
-
-
 class UserSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSettings
@@ -297,6 +286,12 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             "signature",
             "auto_reply_from_email",
         ]
+
+
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label
+        fields = ["id", "user", "name", "color", "emails"]
 
 
 class EmailSerializer(serializers.ModelSerializer):

@@ -78,6 +78,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
             );
           },
           context,
+          emailsProvider,
         );
       },
     );

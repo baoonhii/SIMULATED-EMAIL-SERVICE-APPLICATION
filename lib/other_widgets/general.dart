@@ -80,3 +80,30 @@ ElevatedButton getButtonCondition(
 }
 
 const centerCircleProgress = Center(child: CircularProgressIndicator());
+
+Widget getAttachmentIcon(EmailAttachment attachment) {
+  final filename = attachment.filename.toLowerCase();
+  if (filename.endsWith('.pdf')) {
+    return const Icon(Icons.picture_as_pdf, color: Colors.red);
+  } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
+    return const Icon(Icons.description, color: Colors.blue);
+  } else if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+    return const Icon(Icons.table_chart, color: Colors.green);
+  } else if (filename.endsWith('.jpg') || filename.endsWith('.png')) {
+    return const Icon(Icons.image, color: Colors.purple);
+  }
+  return const Icon(Icons.attach_file);
+}
+
+
+enum LabelColorPreset {
+  red(Color(0xFFFF5252)),
+  green(Color(0xFF4CAF50)),
+  blue(Color(0xFF2196F3)),
+  purple(Color(0xFF9C27B0)),
+  orange(Color(0xFFFF9800)),
+  grey(Color(0xFF9E9E9E));
+
+  final Color color;
+  const LabelColorPreset(this.color);
+}

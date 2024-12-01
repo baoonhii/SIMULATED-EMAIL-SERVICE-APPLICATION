@@ -394,10 +394,7 @@ class EmailListView(generics.ListAPIView):
             )
 
         elif mailbox == "sent":
-            # Emails sent by the user
             print("Fetching emails")
-            print(Email.objects.count())
-            print(Email.objects.filter(sender=user))
             return (
                 Email.objects.filter(sender=user)
                 .exclude(is_trashed=True)
@@ -409,11 +406,206 @@ class EmailListView(generics.ListAPIView):
             return Email.objects.filter(sender=user, is_draft=True).order_by("-sent_at")
 
         elif mailbox == "trash":
-            # Trashed emails
-            return Email.objects.filter(
+            print("Fetching trashed emails")
+            results = Email.objects.filter(
                 Q(sender=user) | Q(recipients=user) | Q(cc=user) | Q(bcc=user),
                 is_trashed=True,
-            ).order_by("-sent_at")
+            )
+            print(results)
+            # Trashed emails
+            return results.order_by("-sent_at")
+
+
+class EmailActionView(APIView):
+    """
+    API endpoint for performing email actions like marking read, starring, trashing
+    """
+
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handle different email actions
+        Request body should include:
+        - message_id: ID of the email
+        - action: Type of action to perform
+        """
+        message_id = request.data.get("message_id")
+        action = request.data.get("action")
+
+        try:
+            email = Email.objects.get(id=message_id)
+
+            print(request.data)
+
+            # Check if user has permission to modify the email
+            if not email.can_view(request.user):
+                return Response(
+                    {"error": "You do not have permission to modify this email"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if action == "mark_read":
+                email.mark_as_read()
+            elif action == "star":
+                email.is_starred = not email.is_starred
+                email.save()
+            elif action == "move_to_trash":
+                email.move_to_trash()
+
+            # Return updated email data
+            serializer = EmailSerializer(email)
+            return Response(serializer.data)
+
+        except Email.DoesNotExist:
+            return Response(
+                {"error": "Email not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class LabelEmailView(APIView):
+    """
+    API endpoint for adding or removing labels on emails.
+    """
+
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handle label actions for an email.
+        Request body should include:
+        - message_id: ID of the email
+        - label_name: Name of the label
+        - action: "add_label" or "remove_label"
+        """
+        message_id = request.data.get("message_id")
+        label_name = request.data.get("label_name")
+        action = request.data.get("action")
+
+        if not message_id or not label_name or not action:
+            return Response(
+                {"error": "message_id, label_name, and action are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            email = Email.objects.get(message_id=message_id)
+
+            # Check if the user can view or modify the email
+            if not email.can_view(request.user):
+                return Response(
+                    {"error": "You do not have permission to modify this email."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            # Retrieve or create the label for the user
+            label = Label.objects.get(user=request.user, name=label_name)
+
+            if action == "add_label":
+                # Add label to email if not already added
+                email.labels.add(label)
+            elif action == "remove_label":
+                # Remove label from email if it exists
+                email.labels.remove(label)
+            else:
+                return Response(
+                    {
+                        "error": f"Invalid action: {action}. Use 'add_label' or 'remove_label'."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Save changes to email
+            email.save()
+
+            # Serialize and return updated email data
+            serializer = EmailSerializer(email)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Email.DoesNotExist:
+            return Response(
+                {"error": "Email not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class LabelManagementView(APIView):
+    """
+    API endpoint for managing labels (create, update, delete)
+    """
+
+    authentication_classes = [SessionTokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        id = request.data.get("id")
+        action = request.data.get("action")
+
+        print(request.data)
+
+        if action == "edit":
+            is_modified = False
+            label = get_object_or_404(Label, user=user, id=id)
+            old_name = label.name
+            new_name = request.data.get("new_name")
+            if new_name != old_name:
+                label.name = new_name
+                is_modified = True
+
+            old_color = label.color
+            new_color = request.data.get("new_color")
+            if new_color != old_color:
+                label.color = new_color
+                is_modified = True
+            if is_modified:
+                label.save()
+                serializer = LabelSerializer(label)
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        elif action == "create":
+            new_name = request.data.get("name")
+            color = request.data.get("color")
+
+            print(f"{new_name=}")
+            print(f"{color=}")
+
+            if Label.objects.filter(user=user, name=new_name).exists():
+                return Response(
+                    {"error": "Label with this name already exists"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            label = Label.objects.create(user=user, name=new_name, color=color)
+            serializer = LabelSerializer(label)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        elif action == "delete":
+            label = get_object_or_404(Label, user=user, id=id)
+            label.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        else:
+            return Response(
+                {"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+        Fetch all labels for the authenticated user
+        """
+        user = request.user
+        labels = Label.objects.filter(user=user)
+        serializer = LabelSerializer(labels, many=True)
+        return Response(serializer.data)
 
 
 # Advanced Email Views

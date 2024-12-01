@@ -128,12 +128,23 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
           Card(
             margin: const EdgeInsets.all(8),
             child: ListTile(
-              leading: const Icon(Icons.reply, color: Colors.blue),
+              leading: const Icon(Icons.auto_awesome, color: Colors.blue),
               title: Text(AppLocalizations.of(context)!.autoRepSetting),
               subtitle: Text(AppLocalizations.of(context)!.autoRepDesc),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
                 Navigator.pushNamed(context, SettingsRoutes.AUTOREP.value);
+              },
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.all(8),
+            child: ListTile(
+              leading: const Icon(Icons.label_important_outlined, color: Colors.blue),
+              title: Text(AppLocalizations.of(context)!.labelManagement),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, SettingsRoutes.LABELS.value);
               },
             ),
           ),

@@ -7,17 +7,39 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../data_classes.dart';
+import '../state_management/email_provider.dart';
+import 'general.dart';
 
 ListTile getEmailTile(
   Email email,
   GestureTapCallback onTap,
   BuildContext context,
+  EmailsProvider emailsProvider,
 ) {
   return ListTile(
     leading: getSenderAvatar(email),
-    title: getEmailTitle(email),
-    subtitle: getPlainSubjectText(email),
-    trailing: getEmailTrailing(email, context),
+    title: getEmailTitle(email, context),
+    subtitle: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        getPlainSubjectText(email),
+        if (email.labels.isNotEmpty)
+          Wrap(
+            spacing: 4,
+            children: email.labels
+                .map(
+                  (label) => Chip(
+                    label: Text(label.displayName),
+                    backgroundColor: label.color,
+                    labelStyle: const TextStyle(fontSize: 10),
+                    padding: const EdgeInsets.all(2),
+                  ),
+                )
+                .toList(),
+          ),
+      ],
+    ),
+    trailing: getEmailTrailing(email, context, emailsProvider),
     onTap: onTap,
   );
 }
@@ -35,15 +57,19 @@ CircleAvatar getSenderAvatar(Email email) {
   );
 }
 
-RichText getEmailTitle(Email email) {
+RichText getEmailTitle(Email email, BuildContext context) {
   return RichText(
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    text: getSenderSpan(email),
+    text: getSenderSpan(email, context),
   );
 }
 
-Column getEmailTrailing(Email email, BuildContext context) {
+Column getEmailTrailing(
+  Email email,
+  BuildContext context,
+  EmailsProvider emailsProvider,
+) {
   return Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.end,
@@ -56,10 +82,13 @@ Column getEmailTrailing(Email email, BuildContext context) {
         ),
       ),
       const SizedBox(height: 4),
-      Icon(
-        email.is_read ? Icons.star_border : Icons.star,
-        color: email.is_read ? Colors.grey : Colors.amber,
-        size: 20,
+      GestureDetector(
+        onTap: () => emailsProvider.performEmailAction(email, EmailAction.star),
+        child: Icon(
+          email.is_starred ? Icons.star : Icons.star_border,
+          color: email.is_starred ? Colors.amber : Colors.grey,
+          size: 20,
+        ),
       ),
     ],
   );
@@ -74,14 +103,16 @@ Text getPlainSubjectText(Email email) {
   );
 }
 
-TextSpan getSenderSpan(Email email) {
+TextSpan getSenderSpan(Email email, BuildContext context) {
   return TextSpan(
     children: [
       TextSpan(
         text: email.subject,
         style: TextStyle(
           fontWeight: email.is_read ? FontWeight.normal : FontWeight.bold,
-          color: email.is_read ? Colors.grey[600] : Colors.black,
+          color: email.is_read
+              ? Colors.grey[600]
+              : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       TextSpan(

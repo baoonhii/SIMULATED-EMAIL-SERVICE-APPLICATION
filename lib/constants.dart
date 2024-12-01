@@ -8,6 +8,7 @@ enum SettingsRoutes {
   ROOT("settings/"),
   USER("settings/userSettings"),
   AUTOREP("settings/autoReply"),
+  LABELS("settings/labels"),
   EDITPROFILE("settings/editProfile"),
   COMPOSEPREF("settings/composePrefs");
 
@@ -40,6 +41,7 @@ enum MailSubroutes {
   ROOT("mails/"),
   DRAFT("mails/drafts"),
   SENT("mails/sent"),
+  TRASH("mails/trash"),
   STARRED("mails/starred"),
   SPAM("mails/spam"),
   ALL("mails/allMail");
@@ -63,6 +65,9 @@ enum API_Endpoints {
   USER_EMAIL_PREF("$API_ROOT/user/email_pref/"),
   EMAIL_SEND("$API_ROOT/email/send/"),
   EMAIL_LIST("$API_ROOT/email_list"),
+  EMAIL_ACTION("$API_ROOT/email/action/"),
+  USER_LABEL("$API_ROOT/user/labels/"),
+  EMAIL_LABEL("$API_ROOT/user/email_labels/"),
   ;
 
   const API_Endpoints(this.value);
@@ -77,13 +82,10 @@ String getUserProfileImageURL(String url) {
 const List<String> fontSizes = ["Small", "Medium", "Large"];
 const List<String> fontFamilies = ["Sans-serif", "Serif", "Monospace"];
 
-
-
 const Map<String, String> fontFamilySelectMap = {
   "Sans-serif": "sans-serif",
   "Serif": "serif",
   "Monospace": "monospace"
 };
-
 
 var fontFamilyValueMap = fontFamilySelectMap.map((k, v) => MapEntry(v, k));

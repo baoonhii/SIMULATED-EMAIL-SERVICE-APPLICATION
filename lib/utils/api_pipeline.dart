@@ -64,7 +64,9 @@ Future<dynamic> makeAPIRequest({
     }
 
     // Handle response
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (response.statusCode == 204) {
+      return null;
+    } else if (response.statusCode >= 200 && response.statusCode < 300) {
       return json.decode(response.body);
     } else {
       final errorData = json.decode(response.body);

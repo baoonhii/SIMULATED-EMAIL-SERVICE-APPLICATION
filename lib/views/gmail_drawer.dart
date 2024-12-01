@@ -54,6 +54,11 @@ class GmailDrawer extends StatelessWidget {
         "titleKey": AppLocalizations.of(context)!.sent,
         "route": MailSubroutes.SENT.value
       },
+      "trash": {
+        "icon": Icons.recycling,
+        "titleKey": AppLocalizations.of(context)!.trash,
+        "route": MailSubroutes.TRASH.value
+      },
     };
 
     Map<String, Map<String, dynamic>> drawerGroup_2 = {

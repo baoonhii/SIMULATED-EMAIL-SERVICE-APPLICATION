@@ -1,5 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:ui';
+
 class EmailAttachment {
   final int file_id;
   final String filename;
@@ -28,6 +30,38 @@ class EmailAttachment {
   }
 }
 
+class EmailLabel {
+  final int id;
+  final String displayName;
+  final Color color;
+
+  EmailLabel({required this.id, required this.displayName, required this.color});
+
+  // Add a method to convert color to hex string
+  String get colorHex {
+    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+  }
+
+  static EmailLabel fromJson(Map<String, dynamic> json) {
+    return EmailLabel(
+      id: json['id'],
+      displayName: json['name'],
+      color: Color(
+        int.parse(json['color'].substring(1), radix: 16) + 0xFF000000,
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': displayName,
+      'color': color,
+    };
+  }
+}
+
+// Updated Email class with labels and additional methods
 class Email {
   final int message_id;
   final String sender;
@@ -38,78 +72,86 @@ class Email {
   final String body;
   final List<EmailAttachment> attachments;
   final DateTime sent_at;
-  final bool is_read;
-  final bool is_starred;
-  final bool is_draft;
-  final bool is_trashed;
-  final bool is_auto_replied;
-
-  @override
-  String toString() {
-    return 'Mail ID: $message_id - Sent by $sender @ $sent_at. Subject: $subject';
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'message_id': message_id,
-      'sender': sender,
-      'recipients': recipients,
-      'cc': cc,
-      'bcc': bcc,
-      'subject': subject,
-      'body': body,
-      'attachments': attachments,
-      'sent_at': sent_at.toIso8601String(),
-      'is_read': is_read,
-      'is_starred': is_starred,
-      'is_draft': is_draft,
-      'is_trashed': is_trashed,
-      'is_auto_replied': is_auto_replied,
-    };
-  }
-
-  factory Email.fromJson(Map<String, dynamic> json) {
-    return Email(
-      message_id: json["id"],
-      sender: json["sender"],
-      recipients: List<String>.from(json['recipients'] ?? []),
-      cc: List<String>.from(json['cc'] ?? []),
-      bcc: List<String>.from(json['bcc'] ?? []),
-      subject: json["subject"],
-      body: json["body"],
-      attachments: parseAttachments(json),
-      sent_at: DateTime.parse(json["sent_at"]),
-      is_read: json["is_read"] ?? false,
-      is_starred: json["is_starred"] ?? false,
-      is_draft: json["is_draft"] ?? false,
-      is_trashed: json["is_trashed"] ?? false,
-      is_auto_replied: json["is_auto_replied"] ?? false,
-    );
-  }
-
-  static List<EmailAttachment> parseAttachments(Map<String, dynamic> json) {
-    return (json['attachments'] as List?)
-            ?.map((item) => EmailAttachment.fromJson(item))
-            .toList() ??
-        [];
-  }
+  bool is_read;
+  bool is_starred;
+  bool is_draft;
+  bool is_trashed;
+  bool is_auto_replied;
+  List<EmailLabel> labels;
 
   Email({
     required this.message_id,
     required this.sender,
     required this.recipients,
-    required this.cc,
-    required this.bcc,
+    this.cc = const [],
+    this.bcc = const [],
     required this.subject,
     required this.body,
-    required this.attachments,
+    this.attachments = const [],
     required this.sent_at,
-    required this.is_read,
-    required this.is_starred,
-    required this.is_draft,
-    required this.is_trashed,
-    required this.is_auto_replied,
+    this.is_read = false,
+    this.is_starred = false,
+    this.is_draft = false,
+    this.is_trashed = false,
+    this.is_auto_replied = false,
+    this.labels = const [],
   });
+
+  // Factory method to create from JSON
+  factory Email.fromJson(Map<String, dynamic> json) {
+    return Email(
+      message_id: json['id'],
+      sender: json['sender'],
+      recipients: List<String>.from(json['recipients'] ?? []),
+      cc: List<String>.from(json['cc'] ?? []),
+      bcc: List<String>.from(json['bcc'] ?? []),
+      subject: json['subject'],
+      body: json['body'],
+      sent_at: DateTime.parse(json['sent_at']),
+      attachments: (json['attachments'] as List?)
+              ?.map((attach) => EmailAttachment.fromJson(attach))
+              .toList() ??
+          [],
+      is_read: json['is_read'] ?? false,
+      is_starred: json['is_starred'] ?? false,
+      is_draft: json['is_draft'] ?? false,
+      is_trashed: json['is_trashed'] ?? false,
+      is_auto_replied: json['is_auto_replied'] ?? false,
+      labels: (json['labels'] as List?)
+              ?.map((attach) => EmailLabel.fromJson(attach))
+              .toList() ??
+          [],
+    );
+  }
+
+  // Method to toggle read status
+  bool toggleReadStatus() {
+    is_read = !is_read;
+    return is_read;
+  }
+
+  // Method to toggle star status
+  bool toggleStarStatus() {
+    is_starred = !is_starred;
+    return is_starred;
+  }
+
+  // Method to add a label
+  void addLabel(EmailLabel label) {
+    if (!labels.contains(label)) {
+      labels.add(label);
+    }
+  }
+
+  // Method to remove a label
+  void removeLabel(EmailLabel label) {
+    labels.remove(label);
+  }
+
+  // Method to move to trash
+  void moveToTrash() {
+    is_trashed = true;
+  }
 }
 
 class Account {
@@ -210,3 +252,7 @@ class NotificationData {
     };
   }
 }
+
+enum EmailAction { markRead, star, moveToTrash }
+
+enum LabelManagementAction { create, edit, delete }
