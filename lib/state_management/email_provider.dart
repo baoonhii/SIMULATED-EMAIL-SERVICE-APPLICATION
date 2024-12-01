@@ -107,13 +107,16 @@ class EmailsProvider extends ChangeNotifier {
   }) async {
     // Keep track of original labels
     final originalLabels = List<EmailLabel>.from(email.labels);
+    print(originalLabels);
     bool shouldAdd = false;
-    if (!email.labels.contains(label)) {
+    if (!originalLabels.contains(label)) {
       email.addLabel(label);
       shouldAdd = true;
     } else {
       email.removeLabel(label);
     }
+
+    print("Should add: $shouldAdd");
 
     // Immediately notify listeners to update UI
     notifyListeners();
@@ -121,14 +124,12 @@ class EmailsProvider extends ChangeNotifier {
     try {
       final body = {
         'message_id': email.message_id,
-        'label': {
-          'name': label.displayName,
-        },
+        'label_id': label.id,
         'action': shouldAdd ? 'add_label' : 'remove_label',
       };
 
       final responseData = await makeAPIRequest(
-        url: Uri.parse(API_Endpoints.EMAIL_ACTION.value),
+        url: Uri.parse(API_Endpoints.EMAIL_LABEL.value),
         method: 'POST',
         body: body,
       );

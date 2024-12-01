@@ -59,6 +59,19 @@ class EmailLabel {
       'color': color,
     };
   }
+
+  @override
+  String toString() {
+    return "$id $displayName $color";
+  }
+
+  bool operator ==(Object other) =>
+      other is EmailLabel &&
+      other.runtimeType == runtimeType &&
+      other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // Updated Email class with labels and additional methods

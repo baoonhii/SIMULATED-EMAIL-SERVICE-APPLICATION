@@ -473,25 +473,16 @@ class LabelEmailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """
-        Handle label actions for an email.
-        Request body should include:
-        - message_id: ID of the email
-        - label_name: Name of the label
-        - action: "add_label" or "remove_label"
-        """
         message_id = request.data.get("message_id")
-        label_name = request.data.get("label_name")
+        label_id = request.data.get("label_id")
         action = request.data.get("action")
-
-        if not message_id or not label_name or not action:
-            return Response(
-                {"error": "message_id, label_name, and action are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        
+        print(request.data)
 
         try:
-            email = Email.objects.get(message_id=message_id)
+            print(message_id)
+            email = get_object_or_404(Email, id=message_id)
+            print(email)
 
             # Check if the user can view or modify the email
             if not email.can_view(request.user):
@@ -501,14 +492,22 @@ class LabelEmailView(APIView):
                 )
 
             # Retrieve or create the label for the user
-            label = Label.objects.get(user=request.user, name=label_name)
+            label = Label.objects.get(user=request.user, id=label_id)
 
             if action == "add_label":
                 # Add label to email if not already added
-                email.labels.add(label)
+                if not label.emails.filter(id=email.id).exists():
+                    label.emails.add(email)
+                    print("Added")
+                    label.save()
             elif action == "remove_label":
                 # Remove label from email if it exists
-                email.labels.remove(label)
+                if label.emails.filter(id=email.id).exists():
+                    label.emails.remove(email)
+                    print("Removed")
+                    label.save()
+                else:
+                    print("Label does not exist")
             else:
                 return Response(
                     {
@@ -516,17 +515,22 @@ class LabelEmailView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-
-            # Save changes to email
+                
             email.save()
 
             # Serialize and return updated email data
             serializer = EmailSerializer(email)
+            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Email.DoesNotExist:
             return Response(
                 {"error": "Email not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Label.DoesNotExist:
+            return Response(
+                {"error": "Label not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
