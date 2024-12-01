@@ -37,7 +37,7 @@ class _MailFolderScreenState extends State<MailFolderScreen> {
   @override
   Widget build(BuildContext context) {
     return GmailBaseScreen(
-      title: AppLocalizations.of(context)!.trashMail,
+      title: widget.title,
       body: Consumer<EmailsProvider>(builder: getMailFolderBuilder),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
