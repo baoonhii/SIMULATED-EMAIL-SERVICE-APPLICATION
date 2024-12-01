@@ -1,16 +1,19 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_email/data_classes.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_email/data_classes.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'gmail_base_screen.dart';
+import '../utils/other.dart';
 import '../other_widgets/general.dart';
 import '../other_widgets/profile_edit.dart';
 import '../state_management/account_provider.dart';
-import '../utils/other.dart';
-import 'gmail_base_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

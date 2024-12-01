@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../constants.dart';
 import '../data_classes.dart';
 import '../utils/api_pipeline.dart';
@@ -37,9 +38,6 @@ class EmailsProvider extends ChangeNotifier {
       } else if (mailbox == 'sent') {
         _sentEmails = (responseData as List)
             .map((json) {
-              print("start json");
-              print(json);
-              print("end json");
               return Email.fromJson(json);
             })
             .toList();

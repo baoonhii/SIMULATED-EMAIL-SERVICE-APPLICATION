@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'gmail_base_screen.dart';
 import '../other_widgets/notif.dart';
 import '../state_management/notif_provider.dart';
-import 'gmail_base_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});

@@ -1,12 +1,14 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'dart:convert';
 import '../constants.dart';
-import '../utils/api_pipeline.dart';
 import '../utils/other.dart';
+import '../utils/api_pipeline.dart';
 
 class EmailComposeProvider extends ChangeNotifier {
   bool _isLoading = false;

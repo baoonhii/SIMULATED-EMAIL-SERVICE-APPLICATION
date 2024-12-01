@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../other_widgets/locale_switcher.dart';
-import '../state_management/account_provider.dart';
+
 import 'gmail_drawer.dart';
+import '../other_widgets/locale_switcher.dart';
 import '../state_management/locale_provider.dart';
+import '../state_management/account_provider.dart';
 
 class GmailBaseScreen extends StatefulWidget {
   final String title;

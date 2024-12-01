@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'manager.dart';
 import 'constants.dart';
+import 'state_management/email_provider.dart';
+import 'state_management/theme_provider.dart';
+import 'state_management/locale_provider.dart';
 import 'state_management/account_provider.dart';
 import 'state_management/email_compose_provider.dart';
-import 'state_management/email_provider.dart';
-import 'state_management/locale_provider.dart';
-import 'manager.dart';
-import 'state_management/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

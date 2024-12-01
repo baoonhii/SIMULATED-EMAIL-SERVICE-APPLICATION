@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
+
 import '../data_classes.dart';
 
 class NotifsProvider extends ChangeNotifier {

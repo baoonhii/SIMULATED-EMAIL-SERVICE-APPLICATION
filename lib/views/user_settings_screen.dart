@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_email/views/gmail_base_screen.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'gmail_base_screen.dart';
 import '../constants.dart';
-import '../other_widgets/general.dart';
-import '../state_management/account_provider.dart';
-import '../state_management/theme_provider.dart';
 import '../utils/api_pipeline.dart';
+import '../other_widgets/general.dart';
+import '../state_management/theme_provider.dart';
+import '../state_management/account_provider.dart';
 
 class UserSettingsScreen extends StatefulWidget {
   const UserSettingsScreen({super.key});

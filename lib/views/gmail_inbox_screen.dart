@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import 'gmail_base_screen.dart';
 import '../constants.dart';
 import '../other_widgets/email.dart';
+import '../other_widgets/general.dart';
 import '../state_management/email_provider.dart';
-import 'gmail_base_screen.dart';
 
 class GmailInboxScreen extends StatefulWidget {
   const GmailInboxScreen({super.key});
@@ -38,39 +40,7 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
         ),
         style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       ),
-      body: Consumer<EmailsProvider>(
-        builder: (context, emailsProvider, child) {
-          if (emailsProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (emailsProvider.hasError) {
-            return Center(child: Text(emailsProvider.errorMessage));
-          }
-
-          if (emailsProvider.emails.isEmpty) {
-            return const Center(child: Text("Inbox is empty"));
-          }
-
-          return ListView.builder(
-            itemCount: emailsProvider.emails.length,
-            itemBuilder: (context, index) {
-              final email = emailsProvider.emails[index];
-              return getEmailTile(
-                email,
-                () {
-                  Navigator.pushNamed(
-                    context,
-                    MailRoutes.EMAIL_DETAIL.value,
-                    arguments: email,
-                  );
-                },
-                context,
-              );
-            },
-          );
-        },
-      ),
+      body: Consumer<EmailsProvider>(builder: getInboxBuilder),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, MailRoutes.COMPOSE.value);
@@ -78,6 +48,38 @@ class _GmailInboxScreenState extends State<GmailInboxScreen> {
         label: Text(AppLocalizations.of(context)!.composeMail),
         icon: const Icon(Icons.edit),
       ),
+    );
+  }
+
+  Widget getInboxBuilder(context, emailsProvider, child) {
+    if (emailsProvider.isLoading) {
+      return centerCircleProgress;
+    }
+
+    if (emailsProvider.hasError) {
+      return Center(child: Text(emailsProvider.errorMessage));
+    }
+
+    if (emailsProvider.emails.isEmpty) {
+      return const Center(child: Text("Inbox is empty"));
+    }
+
+    return ListView.builder(
+      itemCount: emailsProvider.emails.length,
+      itemBuilder: (context, index) {
+        final email = emailsProvider.emails[index];
+        return getEmailTile(
+          email,
+          () {
+            Navigator.pushNamed(
+              context,
+              MailRoutes.EMAIL_DETAIL.value,
+              arguments: email,
+            );
+          },
+          context,
+        );
+      },
     );
   }
 }

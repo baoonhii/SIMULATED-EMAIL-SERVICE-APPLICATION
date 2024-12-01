@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import '../constants.dart';
-import '../other_widgets/general.dart';
-import '../state_management/account_provider.dart';
 import '../utils/validators.dart';
+import '../other_widgets/general.dart';
 import '../views/gmail_base_screen.dart';
+import '../state_management/account_provider.dart';
 
 class GmailLoginScreen extends StatefulWidget {
   const GmailLoginScreen({super.key});

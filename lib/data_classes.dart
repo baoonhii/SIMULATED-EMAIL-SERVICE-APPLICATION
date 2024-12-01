@@ -49,24 +49,24 @@ class Email {
     return 'Mail ID: $message_id - Sent by $sender @ $sent_at. Subject: $subject';
   }
 
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'message_id': message_id,
-  //     'sender': sender,
-  //     'recipients': recipients,
-  //     'cc': cc,
-  //     'bcc': bcc,
-  //     'subject': subject,
-  //     'body': body,
-  //     'attachments': attachments,
-  //     'sent_at': sent_at.toIso8601String(),
-  //     'is_read': is_read,
-  //     'is_starred': is_starred,
-  //     'is_draft': is_draft,
-  //     'is_trashed': is_trashed,
-  //     'is_auto_replied': is_auto_replied,
-  //   };
-  // }
+  Map<String, dynamic> toJson() {
+    return {
+      'message_id': message_id,
+      'sender': sender,
+      'recipients': recipients,
+      'cc': cc,
+      'bcc': bcc,
+      'subject': subject,
+      'body': body,
+      'attachments': attachments,
+      'sent_at': sent_at.toIso8601String(),
+      'is_read': is_read,
+      'is_starred': is_starred,
+      'is_draft': is_draft,
+      'is_trashed': is_trashed,
+      'is_auto_replied': is_auto_replied,
+    };
+  }
 
   factory Email.fromJson(Map<String, dynamic> json) {
     return Email(
@@ -77,9 +77,7 @@ class Email {
       bcc: List<String>.from(json['bcc'] ?? []),
       subject: json["subject"],
       body: json["body"],
-      attachments: (json['attachments'] as List?)
-          ?.map((item) => EmailAttachment.fromJson(item))
-          .toList() ?? [],
+      attachments: parseAttachments(json),
       sent_at: DateTime.parse(json["sent_at"]),
       is_read: json["is_read"] ?? false,
       is_starred: json["is_starred"] ?? false,
@@ -87,6 +85,13 @@ class Email {
       is_trashed: json["is_trashed"] ?? false,
       is_auto_replied: json["is_auto_replied"] ?? false,
     );
+  }
+
+  static List<EmailAttachment> parseAttachments(Map<String, dynamic> json) {
+    return (json['attachments'] as List?)
+            ?.map((item) => EmailAttachment.fromJson(item))
+            .toList() ??
+        [];
   }
 
   Email({

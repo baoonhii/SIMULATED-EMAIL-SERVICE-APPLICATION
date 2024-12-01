@@ -1,6 +1,7 @@
 import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 
 class WebAttachment {
   final String name;
@@ -29,3 +30,4 @@ String getRandomizedName(
   }
   return randomizedFilename;
 }
+

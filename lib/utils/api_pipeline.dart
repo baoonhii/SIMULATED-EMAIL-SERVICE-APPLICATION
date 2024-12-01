@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'other.dart';
 
 Future<dynamic> makeAPIRequest({
@@ -94,6 +97,7 @@ Future<http.MultipartFile> fileToHTTP(
     field,
     file.path,
     filename: filename,
+    contentType: MediaType('image', 'jpeg'),
   );
 }
 
@@ -117,7 +121,7 @@ Future<dynamic> uploadImage({
     // Add text fields
     request.fields.addAll(fields);
 
-    // Add file
+    // Add file if present
     if (fileToUpload != null) {
       request.files.add(
         await fileToHTTP(

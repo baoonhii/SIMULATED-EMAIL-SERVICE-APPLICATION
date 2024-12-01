@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '../other_widgets/general.dart';
-import '../utils/api_pipeline.dart';
-import '../constants.dart';
+
 import 'gmail_base_screen.dart';
+import '../constants.dart';
+import '../utils/api_pipeline.dart';
+import '../other_widgets/general.dart';
 
 class EmailPrefScreen extends StatefulWidget {
   const EmailPrefScreen({super.key});

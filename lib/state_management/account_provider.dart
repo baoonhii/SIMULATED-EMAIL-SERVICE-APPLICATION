@@ -1,12 +1,13 @@
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../data_classes.dart';
-import '../utils/api_pipeline.dart';
 import '../utils/other.dart';
+import '../utils/api_pipeline.dart';
 
 class AccountProvider extends ChangeNotifier {
   Account? _currentAccount;
@@ -165,20 +166,13 @@ class AccountProvider extends ChangeNotifier {
     };
 
     // Perform file upload or regular update
-    final responseData =
-        await (profilePicture != null || profilePictureWeb != null
-            ? uploadImage(
-                url: Uri.parse(API_Endpoints.USER_PROFILE.value),
-                fields: fields,
-                fileToUpload: profilePicture,
-                fileWeb: profilePictureWeb,
-                fileFieldName: 'profile_picture',
-              )
-            : makeAPIRequest(
-                url: Uri.parse(API_Endpoints.USER_PROFILE.value),
-                method: 'PUT',
-                body: fields,
-              ));
+    final responseData = await uploadImage(
+      url: Uri.parse(API_Endpoints.USER_PROFILE.value),
+      fields: fields,
+      fileToUpload: profilePicture,
+      fileWeb: profilePictureWeb,
+      fileFieldName: 'profile_picture',
+    );
 
     // Update account and profile
     final updatedUser = Account.fromJson(responseData['user']);
