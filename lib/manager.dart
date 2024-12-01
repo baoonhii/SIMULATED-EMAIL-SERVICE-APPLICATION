@@ -3,18 +3,17 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'data_classes.dart';
 import 'auth/login.dart';
+import 'views/mail_folder_screen.dart';
 import 'views/gmail_inbox_screen.dart';
 import 'views/edit_profile_screen.dart';
-import 'views/gmail_trash_mail_screen.dart';
-import 'views/label_settings_screen.dart';
 import 'views/notifications_screen.dart';
 import 'views/user_settings_screen.dart';
+import 'views/label_settings_screen.dart';
 import 'views/gmail_register_screen.dart';
-import 'views/gmail_sent_mail_screen.dart';
 import 'views/gmail_email_pref_screen.dart';
 import 'views/gmail_email_detail_screen.dart';
-import 'views/auto_reply_settings_screen.dart';
 import 'views/gmail_compose_email_screen.dart';
+import 'views/auto_reply_settings_screen.dart';
 
 PageRouteBuilder getRouterManager(
   RouteSettings settings,

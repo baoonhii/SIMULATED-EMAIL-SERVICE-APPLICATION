@@ -20,6 +20,17 @@ class EmailsProvider extends ChangeNotifier {
   bool get hasError => _hasError;
   String get errorMessage => _errorMessage;
 
+  List<Email> getFolder(String folderName) {
+    switch (folderName) {
+      case 'sent':
+        return sentEmails;
+      case 'trash':
+        return trashedEmails;
+      default:
+        throw Exception("Unknown folder");
+    }
+  }
+
   Future<void> performEmailAction(Email email, EmailAction action) async {
     bool originalState;
 
