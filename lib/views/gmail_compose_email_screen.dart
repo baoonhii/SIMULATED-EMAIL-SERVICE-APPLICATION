@@ -1,22 +1,79 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:uuid/uuid.dart';
 
 import '../constants.dart';
+import '../data_classes.dart';
+import '../state_management/draft_provider.dart';
 import '../utils/other.dart';
 import '../utils/parsers.dart';
 import '../other_widgets/general.dart';
 import '../state_management/email_compose_provider.dart';
 
+extension on EmailComposeScreen {
+  bool get isDraftEdit => draftToEdit != null;
+}
+
+extension on _EmailComposeScreenState {
+  void _autosaveDraft() {
+    _currentDraftId ??= const Uuid().v4();
+    print(_currentDraftId);
+
+    final draft = DraftEmail(
+      id: _currentDraftId!,
+      recipients: _parseEmails(_recipientsController.text),
+      ccRecipients: _parseEmails(_ccController.text),
+      bccRecipients: _parseEmails(_bccController.text),
+      subject: _subjectController.text,
+      body: jsonEncode(_quillController.document.toDelta().toJson()),
+      attachments: _attachments.isNotEmpty ? _attachments : null,
+    );
+
+    Provider.of<DraftsProvider>(context, listen: false).saveDraft(draft);
+  }
+
+  List<String> _parseEmails(String text) {
+    return text.isEmpty
+        ? []
+        : text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+  }
+
+  void _loadDraftForEditing(DraftEmail draft) {
+    _recipientsController.text = draft.recipients.join(', ');
+    _ccController.text = draft.ccRecipients?.join(', ') ?? '';
+    _bccController.text = draft.bccRecipients?.join(', ') ?? '';
+    _subjectController.text = draft.subject;
+    _quillController.document = quill.Document.fromJson(jsonDecode(draft.body));
+  }
+}
+
 class EmailComposeScreen extends StatefulWidget {
-  const EmailComposeScreen({super.key});
+  final Email? replyTo;
+  final Email? forwardFrom;
+  final DraftEmail? draftToEdit;
+
+  const EmailComposeScreen({
+    super.key,
+    this.replyTo,
+    this.forwardFrom,
+    this.draftToEdit,
+  });
 
   @override
   State<EmailComposeScreen> createState() => _EmailComposeScreenState();
@@ -32,9 +89,118 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
 
   final List<dynamic> _attachments = [];
 
+  Timer? _autosaveTimer;
+  String? _currentDraftId;
+
   @override
   void initState() {
     super.initState();
+    if (widget.draftToEdit != null) {
+      _currentDraftId = widget.draftToEdit!.id;
+      _loadDraftForEditing(widget.draftToEdit!);
+    } else if (widget.replyTo != null) {
+      // Replying to an email
+      _recipientsController.text = widget.replyTo!.sender;
+      _subjectController.text = 'Re: ${widget.replyTo!.subject}';
+
+      final sender = widget.replyTo!.sender;
+      final sentAt = DateFormat('yyyy-MM-dd HH:mm').format(
+        widget.replyTo!.sent_at,
+      );
+      final header = 'On $sentAt, $sender wrote:\n\n';
+
+      try {
+        final originalBodyDelta = quill.Document.fromJson(
+          jsonDecode(widget.replyTo!.body),
+        );
+        final originalBodyText = originalBodyDelta.toPlainText();
+        final replyDelta = Delta()
+          ..insert(header)
+          ..insert(originalBodyText.trim(), {'block': 'quote'})
+          ..insert("\n", {"block": "quote", "blockquote": true});
+
+        _quillController.document = quill.Document.fromDelta(replyDelta);
+      } catch (e) {
+        print('Error parsing reply body: $e');
+      }
+    } else if (widget.forwardFrom != null) {
+      // Forwarding an email
+      _subjectController.text = 'Fwd: ${widget.forwardFrom!.subject}';
+
+      final sender = widget.forwardFrom!.sender;
+      final sentAt = DateFormat('yyyy-MM-dd HH:mm').format(
+        widget.forwardFrom!.sent_at,
+      );
+
+      final forwardHeader = '---------- Forwarded message ----------\n'
+          'From: $sender\n'
+          'Date: $sentAt\n'
+          'Subject: ${widget.forwardFrom!.subject}\n\n';
+
+      try {
+        _quillController.document = quill.Document.fromJson(
+          jsonDecode(widget.forwardFrom!.body),
+        );
+        _quillController.document.insert(0, forwardHeader);
+      } catch (e) {
+        print('Error parsing reply body: $e');
+      }
+    }
+    _autosaveTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _autosaveDraft();
+    });
+
+    // Add listener to controllers to trigger autosave on changes
+    _recipientsController.addListener(_triggerAutosave);
+    _ccController.addListener(_triggerAutosave);
+    _bccController.addListener(_triggerAutosave);
+    _subjectController.addListener(_triggerAutosave);
+
+    // Add listener to Quill controller
+    _quillController.addListener(_triggerAutosave);
+  }
+
+  void _triggerAutosave() {
+    // Only autosave if there's some content
+    if (_hasContent()) {
+      _autosaveDraft();
+    }
+  }
+
+  bool _hasContent() {
+    return _recipientsController.text.isNotEmpty ||
+        _ccController.text.isNotEmpty ||
+        _bccController.text.isNotEmpty ||
+        _subjectController.text.isNotEmpty ||
+        _quillController.document.toPlainText().trim().isNotEmpty;
+  }
+
+  @override
+  void dispose() {
+    // // If the email is sent or abandoned without saving, optionally cleanup
+    // if (_hasContent() && _currentDraftId != null) {
+    //   Provider.of<DraftsProvider>(context, listen: false).saveDraft(DraftEmail(
+    //     id: _currentDraftId!,
+    //     recipients: _parseEmails(_recipientsController.text),
+    //     ccRecipients: _parseEmails(_ccController.text),
+    //     bccRecipients: _parseEmails(_bccController.text),
+    //     subject: _subjectController.text,
+    //     body: jsonEncode(_quillController.document.toDelta().toJson()),
+    //     attachments: _attachments.isNotEmpty ? _attachments : null,
+    //   ));
+    // }
+
+    // Cancel the autosave timer
+    _autosaveTimer?.cancel();
+
+    // Remove listeners
+    _recipientsController.removeListener(_triggerAutosave);
+    _ccController.removeListener(_triggerAutosave);
+    _bccController.removeListener(_triggerAutosave);
+    _subjectController.removeListener(_triggerAutosave);
+    _quillController.removeListener(_triggerAutosave);
+
+    super.dispose();
   }
 
   void _pickAttachments() async {
@@ -72,6 +238,11 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
 
     final content = jsonEncode(_quillController.document.toDelta().toJson());
     print(content);
+
+    if (_currentDraftId != null) {
+      Provider.of<DraftsProvider>(context, listen: false)
+          .deleteDraft(_currentDraftId!);
+    }
 
     Provider.of<EmailComposeProvider>(context, listen: false).sendEmail(
       recipients: recipients,

@@ -81,21 +81,6 @@ ElevatedButton getButtonCondition(
 
 const centerCircleProgress = Center(child: CircularProgressIndicator());
 
-Widget getAttachmentIcon(EmailAttachment attachment) {
-  final filename = attachment.filename.toLowerCase();
-  if (filename.endsWith('.pdf')) {
-    return const Icon(Icons.picture_as_pdf, color: Colors.red);
-  } else if (filename.endsWith('.docx') || filename.endsWith('.doc')) {
-    return const Icon(Icons.description, color: Colors.blue);
-  } else if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
-    return const Icon(Icons.table_chart, color: Colors.green);
-  } else if (filename.endsWith('.jpg') || filename.endsWith('.png')) {
-    return const Icon(Icons.image, color: Colors.purple);
-  }
-  return const Icon(Icons.attach_file);
-}
-
-
 enum LabelColorPreset {
   red(Color(0xFFFF5252)),
   green(Color(0xFF4CAF50)),
@@ -106,4 +91,12 @@ enum LabelColorPreset {
 
   final Color color;
   const LabelColorPreset(this.color);
+}
+
+Color getTextColorForChip(Color chipColor) {
+  double luminance = (0.299 * chipColor.red +
+          0.587 * chipColor.green +
+          0.114 * chipColor.blue) /
+      255;
+  return luminance > 0.5 ? Colors.black : Colors.white;
 }

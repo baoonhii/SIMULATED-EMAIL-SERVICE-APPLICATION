@@ -28,7 +28,11 @@ class NotifsProvider extends ChangeNotifier {
       Map<String, dynamic> jsonMap = jsonDecode(jsonString);
       List<dynamic> notifsJson = jsonMap['notifications'];
 
-      _notifs = notifsJson.map((json) => NotificationData.fromJson(json)).toList();
+      _notifs = notifsJson
+          .map(
+            (json) => NotificationData.fromJson(json),
+          )
+          .toList();
       _isLoading = false;
       notifyListeners();
     } catch (e) {

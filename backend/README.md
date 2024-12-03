@@ -14,7 +14,8 @@ Stack:
 
 1. Setup PostgreSQL
    - Use latest (PostgreSQL 17): <https://www.postgresql.org/download/windows/>
-2. Setup Django and requirements
+2. Install redis for Windows: <https://github.com/tporadowski/redis/releases>
+3. Setup Django and requirements
    - Install Python (3.10)
    - Create virtual environment: `python -m venv venv`
    - Activate environment: `venv\Scripts\activate`
@@ -52,4 +53,5 @@ Stack:
    - Run the project: `python manage.py runserver`
    - Create superuser: `python manage.py createsuperuser`
    - Save requirements: `pip freeze > requirements.txt`
-3. s
+4. Start the redis server for notif
+   - `redis-server.exe --port 6380`

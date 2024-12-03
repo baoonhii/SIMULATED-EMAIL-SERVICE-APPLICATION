@@ -1,20 +1,23 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
 
 import '../data_classes.dart';
-import '../other_widgets/general.dart';
+import '../utils/attachment_handler.dart';
+import '../other_widgets/email_detailed.dart';
 import '../state_management/email_provider.dart';
 import '../state_management/label_provider.dart';
+import 'gmail_compose_email_screen.dart';
 
 class GmailEmailDetailScreen extends StatefulWidget {
   final Email email;
+  final String? mailbox;
 
-  const GmailEmailDetailScreen({super.key, required this.email});
+  const GmailEmailDetailScreen({super.key, required this.email, this.mailbox});
 
   @override
   State<GmailEmailDetailScreen> createState() => _GmailEmailDetailScreenState();
@@ -28,6 +31,28 @@ class _GmailEmailDetailScreenState extends State<GmailEmailDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<LabelProvider>(context, listen: false).fetchLabels();
     });
+  }
+
+  void _replyEmail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EmailComposeScreen(
+          replyTo: widget.email,
+        ),
+      ),
+    );
+  }
+
+  void _forwardEmail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EmailComposeScreen(
+          forwardFrom: widget.email,
+        ),
+      ),
+    );
   }
 
   @override
@@ -44,72 +69,19 @@ class _GmailEmailDetailScreenState extends State<GmailEmailDetailScreen> {
         title: Text(AppLocalizations.of(context)!.mailDetail),
         actions: [
           // Mark as Read/Unread
-          IconButton(
-            icon: Icon(
-              widget.email.is_read
-                  ? Icons.mark_email_unread
-                  : Icons.mark_email_read,
-            ),
-            onPressed: () {
-              emailsProvider.performEmailAction(
-                widget.email,
-                EmailAction.markRead,
-              );
-              print("is read?");
-              setState(() {});
-            },
-          ),
+          getReadEmailButton(emailsProvider),
           // Star/Unstar
-          IconButton(
-            icon: Icon(
-              widget.email.is_starred ? Icons.star : Icons.star_border,
-            ),
-            onPressed: () => emailsProvider.performEmailAction(
-              widget.email,
-              EmailAction.star,
-            ),
-          ),
+          getStarEmailButton(emailsProvider),
           // Move to Trash
+          getTrashEmailButton(emailsProvider),
+          getLabelManagementDropdown(emailsProvider, labelsProvider),
           IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => emailsProvider.performEmailAction(
-              widget.email,
-              EmailAction.moveToTrash,
-            ),
+            icon: const Icon(Icons.reply),
+            onPressed: _replyEmail,
           ),
-          // Label Dropdown
-          PopupMenuButton<EmailLabel>(
-            icon: const Icon(Icons.label),
-            onSelected: (EmailLabel label) {
-              // Toggle label
-              emailsProvider.updateEmailLabels(
-                email: widget.email,
-                label: label,
-              );
-            },
-            itemBuilder: (BuildContext context) => labelsProvider.labels.map(
-              (EmailLabel label) {
-                bool isLabeled = widget.email.labels.contains(label);
-                return PopupMenuItem<EmailLabel>(
-                  value: label,
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: isLabeled,
-                        onChanged: (bool? newValue) {
-                          emailsProvider.updateEmailLabels(
-                            email: widget.email,
-                            label: label,
-                          );
-                          Navigator.of(context).pop(); // Close the popup menu
-                        },
-                      ),
-                      Text(label.displayName),
-                    ],
-                  ),
-                );
-              },
-            ).toList(),
+          IconButton(
+            icon: const Icon(Icons.forward),
+            onPressed: _forwardEmail,
           ),
         ],
       ),
@@ -119,27 +91,12 @@ class _GmailEmailDetailScreenState extends State<GmailEmailDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Metadata section
-            _buildMetadataSection(context),
+            buildMetadataSection(context, widget.email),
             const SizedBox(height: 10),
             const Divider(color: Colors.grey),
             const SizedBox(height: 10),
             // Email body
-            Expanded(
-              child: quill.QuillEditor.basic(
-                controller: quillController,
-                scrollController: ScrollController(),
-                configurations: const quill.QuillEditorConfigurations(
-                  scrollable: true,
-                  expands: false,
-                  showCursor: false,
-                  padding: EdgeInsets.all(16),
-                  autoFocus: false,
-                ),
-                focusNode: FocusNode(
-                  canRequestFocus: false,
-                ),
-              ),
-            ),
+            getQuillViewer(quillController),
             // Attachments section
             if (widget.email.attachments.isNotEmpty) _buildAttachmentsSection(),
           ],
@@ -148,60 +105,101 @@ class _GmailEmailDetailScreenState extends State<GmailEmailDetailScreen> {
     );
   }
 
-  Widget _buildMetadataSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Subject: ${widget.email.subject}',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.person, color: Colors.grey),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'From: ${widget.email.sender}',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                      color: Colors.grey[700],
-                    ),
-              ),
+  IconButton getReadEmailButton(EmailsProvider emailsProvider) {
+    return IconButton(
+      icon: Icon(
+        widget.email.is_read ? Icons.mark_email_unread : Icons.mark_email_read,
+      ),
+      onPressed: () {
+        emailsProvider.performEmailAction(
+          widget.email,
+          EmailAction.markRead,
+          mailbox: widget.mailbox,
+        );
+        print("is read?");
+        setState(() {});
+      },
+    );
+  }
+
+  IconButton getStarEmailButton(EmailsProvider emailsProvider) {
+    return IconButton(
+      icon: Icon(
+        widget.email.is_starred ? Icons.star : Icons.star_border,
+      ),
+      onPressed: () => emailsProvider.performEmailAction(
+        widget.email,
+        EmailAction.star,
+      ),
+    );
+  }
+
+  IconButton getTrashEmailButton(EmailsProvider emailsProvider) {
+    return IconButton(
+      icon: const Icon(Icons.delete),
+      onPressed: () => emailsProvider.performEmailAction(
+        widget.email,
+        EmailAction.moveToTrash,
+        mailbox: widget.mailbox,
+      ),
+    );
+  }
+
+  PopupMenuButton<EmailLabel> getLabelManagementDropdown(
+    EmailsProvider emailsProvider,
+    LabelProvider labelsProvider,
+  ) {
+    return PopupMenuButton<EmailLabel>(
+      icon: const Icon(Icons.label),
+      onSelected: (EmailLabel label) {
+        // Toggle label
+        emailsProvider.updateEmailLabels(
+          email: widget.email,
+          label: label,
+        );
+      },
+      itemBuilder: (BuildContext context) => labelsProvider.labels.map(
+        (EmailLabel label) {
+          bool isLabeled = widget.email.labels.contains(label);
+          return PopupMenuItem<EmailLabel>(
+            value: label,
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isLabeled,
+                  onChanged: (bool? newValue) {
+                    emailsProvider.updateEmailLabels(
+                      email: widget.email,
+                      label: label,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+                Text(label.displayName),
+              ],
             ),
-          ],
+          );
+        },
+      ).toList(),
+    );
+  }
+
+  Expanded getQuillViewer(quill.QuillController quillController) {
+    return Expanded(
+      child: quill.QuillEditor.basic(
+        controller: quillController,
+        scrollController: ScrollController(),
+        configurations: const quill.QuillEditorConfigurations(
+          scrollable: true,
+          expands: false,
+          showCursor: false,
+          padding: EdgeInsets.all(16),
+          autoFocus: false,
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.people, color: Colors.grey),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'To: ${widget.email.recipients.join(", ")}',
-                style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                      color: Colors.grey[700],
-                    ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        focusNode: FocusNode(
+          canRequestFocus: false,
         ),
-        if (widget.email.labels.isNotEmpty) const SizedBox(height: 8),
-        if (widget.email.labels.isNotEmpty)
-          Wrap(
-            spacing: 8,
-            children: widget.email.labels
-                .map((label) => Chip(
-                      label: Text(label.displayName),
-                      backgroundColor: label.color,
-                    ))
-                .toList(),
-          ),
-      ],
+      ),
     );
   }
 
@@ -209,14 +207,24 @@ class _GmailEmailDetailScreenState extends State<GmailEmailDetailScreen> {
     return ExpansionTile(
       title: Text('Attachments (${widget.email.attachments.length})'),
       children: widget.email.attachments.map((attachment) {
-        return ListTile(
-          leading: getAttachmentIcon(attachment),
-          title: Text(attachment.filename),
-          trailing: IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () {
-              print("Trying to download attachment");
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: InkWell(
+            onTap: () {
+              // Preview attachment when tile is tapped
+              AttachmentHandler.previewAttachment(context, attachment);
             },
+            child: ListTile(
+              leading: AttachmentHandler.getAttachmentIcon(attachment),
+              title: Text(attachment.filename),
+              trailing: IconButton(
+                icon: const Icon(Icons.download),
+                onPressed: () {
+                  // Download attachment when download button is pressed
+                  AttachmentHandler.downloadAttachment(context, attachment);
+                },
+              ),
+            ),
           ),
         );
       }).toList(),

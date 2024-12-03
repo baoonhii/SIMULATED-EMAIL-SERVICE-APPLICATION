@@ -1,107 +1,144 @@
-from django.db.models.signals import post_save, pre_save, m2m_changed
-from django.dispatch import receiver
-from channels.layers import get_channel_layer
+import json
 from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from django.utils import timezone
+from .models import Email, Notification, UserSettings
+from .serializers import EmailSerializer, NotificationSerializer
 
-from .models import Email, User, UserProfile, UserSettings, Label
-from .serializers import EmailSerializer, UserProfileSerializer
 
-@receiver(pre_save, sender=UserProfile)
-def update_profile_picture(sender, instance, **kwargs):
-    """
-    Send notification when user profile picture is updated
-    """
-    try:
-        old_profile = UserProfile.objects.get(pk=instance.pk)
-        
-        # Check if profile picture has changed
-        if (instance.profile_picture and 
-            instance.profile_picture != old_profile.profile_picture):
-            
-            channel_layer = get_channel_layer()
-            
-            # Prepare profile data
-            profile_data = UserProfileSerializer(instance).data
-            
-            # Send updated profile picture to user's group
-            async_to_sync(channel_layer.group_send)(
-                f"user_{instance.user.id}",
-                {
-                    "type": "profile_picture_updated",
-                    "profile_data": profile_data
-                }
-            )
-    except UserProfile.DoesNotExist:
-        return  # No existing profile to compare
+@receiver(m2m_changed, sender=Email.recipients.through)
+def send_email_notification(sender, instance, action, **kwargs):
+    if action == "post_add":
+        print(instance)
+        print("Signal triggered")
 
-@receiver(post_save, sender=Email)
-def notify_new_email(sender, instance, created, **kwargs):
-    """
-    Notify recipients of a new email and handle auto-reply
-    """
-    if created and not instance.is_draft:
-        # Get all recipients (including CC and BCC)
-        recipient_ids = set(
-            list(instance.recipients.values_list("id", flat=True)) +
-            list(instance.cc.values_list("id", flat=True)) +
-            list(instance.bcc.values_list("id", flat=True))
-        )
-        
-        # Serialize the email
-        serialized_email = EmailSerializer(instance, context={"request": None}).data
-        
         channel_layer = get_channel_layer()
-        
-        # Send notification to each recipient
-        for recipient_id in recipient_ids:
-            async_to_sync(channel_layer.group_send)(
-                f"user_{recipient_id}", 
-                {
-                    "type": "new_email",
-                    "message": serialized_email
-                }
-            )
-            
-            # Check for auto-reply
+
+        # Determine recipients
+        recipients = set()
+        try:
+            # Print detailed recipient information
+            print("Recipients:", list(instance.recipients.all()))
+            print("CC:", list(instance.cc.all()))
+            print("BCC:", list(instance.bcc.all()))
+
+            recipients.update(instance.recipients.all())
+            recipients.update(instance.cc.all())
+            recipients.update(instance.bcc.all())
+
+            print("Total unique recipients:", len(recipients))
+        except Exception as e:
+            print(f"Error gathering email recipients: {e}")
+            return
+
+        # If no recipients, exit early
+        if not recipients:
+            print("No recipients found")
+            return
+
+        # Serialize email data using EmailSerializer
+        email_data = EmailSerializer(instance).data
+
+        print(email_data)
+
+        # Send to each recipient's channel group
+        for recipient in recipients:
             try:
-                user_settings = UserSettings.objects.get(user_id=recipient_id)
+                # Create Notification object
+                notification = Notification.objects.create(
+                    user=recipient,
+                    message=f"You have a new email from {instance.sender.first_name} {instance.sender.last_name}!",
+                    related_email=instance,
+                    notification_type="email",
+                )
+
+                # Serialize notification data
+                notification_data = NotificationSerializer(notification).data
+
+                # Combine email and notification data
+                message = {
+                    "type": "email_notification",
+                    "email": email_data,
+                    "notification": notification_data,
+                }
+                group = f"user_{recipient.id}_emails"
+                print(f"Sending to group: {group}")
+                async_to_sync(channel_layer.group_send)(group, message)
+
+                # Check for auto-reply
+                handle_auto_reply(instance, recipient)
+            except Exception as e:
+                print(
+                    f"Error sending WebSocket notification to user {recipient.id}: {e}"
+                )
+
+
+def handle_auto_reply(email: Email, recipient):
+    print("handling auto reply")
+    try:
+        if not email.is_auto_replied:
+            user_settings = UserSettings.objects.get(user=recipient)
+            print("Found user")
+            if user_settings.auto_reply_enabled:
+                auto_reply_message = user_settings.auto_reply_message
+                auto_reply_email = Email.objects.create(
+                    sender=recipient,
+                    subject=f"Re: {email.subject}",
+                    body=plain_text_to_quill_delta(auto_reply_message),
+                    sent_at=timezone.now(),
+                    is_auto_replied=True,
+                    reply_to=email,
+                )
+                # Set recipients using the set() method
+                auto_reply_email.recipients.set([email.sender])
+                auto_reply_email.save()  # Ensure the email is saved
+
+                # Serialize auto-reply email data
+                auto_reply_email_data = EmailSerializer(auto_reply_email).data
+
+                # Create Notification object for auto-reply
+                auto_reply_notification = Notification.objects.create(
+                    user=email.sender,
+                    message=f"You have received an auto-reply from {recipient.first_name} {recipient.last_name}.",
+                    related_email=auto_reply_email,
+                    notification_type="email",
+                )
+
+                # Serialize auto-reply notification data
+                auto_reply_notification_data = NotificationSerializer(
+                    auto_reply_notification
+                ).data
+
+                # Combine auto-reply email and notification data
+                auto_reply_message = {
+                    "type": "email_notification",
+                    "email": auto_reply_email_data,
+                    "notification": auto_reply_notification_data,
+                }
                 
-                if (user_settings.auto_reply_enabled and 
-                    user_settings.auto_reply_message):
-                    # Create and send auto-reply
-                    auto_reply = Email.objects.create(
-                        sender=User.objects.get(id=recipient_id),
-                        recipients=[instance.sender],
-                        subject=f"Auto-Reply: {instance.subject}",
-                        body=user_settings.auto_reply_message,
-                        reply_to=instance,
-                        is_auto_replied=True
-                    )
-            except (UserSettings.DoesNotExist, User.DoesNotExist):
-                pass
+                print()
+                print()
+                print()
+                print()
+                
+                print(auto_reply_notification_data)
+                
+                print()
+                print()
+                print()
+                print()
+                
+                group = f"user_{email.sender.id}_emails"
+                print(f"Sending auto-reply to group: {group}")
+                async_to_sync(get_channel_layer().group_send)(group, auto_reply_message)
+    except UserSettings.DoesNotExist:
+        print(f"No user settings found for user {recipient.id}")
+    except Exception as e:
+        print(f"Error handling auto-reply for user {recipient.id}: {e}")
 
-@receiver(m2m_changed, sender=Email.labels.through)
-def update_label_email_count(sender, instance, action, **kwargs):
-    """
-    Update label email count when labels are added or removed
-    """
-    if action in ["post_add", "post_remove"]:
-        for label in instance.labels.all():
-            label.save()  # Trigger any label-specific logic
-
-@receiver(post_save, sender=Label)
-def notify_label_update(sender, instance, created, **kwargs):
-    """
-    Notify user about label creation or modification
-    """
-    if created:
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"user_{instance.user.id}",
-            {
-                "type": "label_created",
-                "label_name": instance.name,
-                "label_color": instance.color
-            }
-        )
+def plain_text_to_quill_delta(text):
+    # Convert plain text to Quill Delta format
+    delta = f'[{{"insert": "{text}\\n"}}]'
+    return delta

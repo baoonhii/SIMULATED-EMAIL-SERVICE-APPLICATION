@@ -1,28 +1,34 @@
 # from .validators import phone_regex
-from django.db import models
-from django.contrib.auth.models import AbstractUser  # More flexible than User
-from django.utils import timezone
-from django.core.validators import RegexValidator
+import random
 import uuid
 
+from django.contrib.auth.models import (
+    AbstractUser,
+    BaseUserManager,
+)
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils import timezone
 from pydantic import ValidationError
 
-from django.contrib.auth.models import BaseUserManager
+from twilio.rest import Client
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         if not phone_number:
-            raise ValueError('The Phone Number field must be set')
+            raise ValueError("The Phone Number field must be set")
         user = self.model(phone_number=phone_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
-    
+
     def create_superuser(self, phone_number, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
         return self.create_user(phone_number, password, **extra_fields)
+
 
 phone_regex = RegexValidator(
     regex=r"^\+?1?\d{9,15}$",
@@ -32,60 +38,67 @@ phone_regex = RegexValidator(
 
 class User(AbstractUser):
     phone_number = models.CharField(
-        validators=[phone_regex], 
-        max_length=20, 
-        unique=True
+        validators=[phone_regex], max_length=20, unique=True
     )
     # Add verification status for two-step verification
     is_phone_verified = models.BooleanField(default=False)
-    
+
     # Session token for persistent login
     session_token = models.CharField(max_length=255, blank=True, null=True)
     session_expiry = models.DateTimeField(blank=True, null=True)
-    
+
     username = models.CharField(
         max_length=150, unique=True, blank=True, null=True
     )  # For admin, if needed
     
+    password_reset_token = models.CharField(max_length=255, blank=True, null=True)
+    password_reset_expires = models.DateTimeField(blank=True, null=True)
+    
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+    verification_code_expires = models.DateTimeField(blank=True, null=True)
+
     # Use phone number as username field
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
     # Set the custom manager
     objects = CustomUserManager()
-    
+
     groups = models.ManyToManyField(
-        'auth.Group', 
-        related_name='gotmail_user_set',  # Unique related name
-        blank=True
+        "auth.Group",
+        related_name="gotmail_user_set",  # Unique related name
+        blank=True,
     )
     user_permissions = models.ManyToManyField(
-        'auth.Permission', 
-        related_name='gotmail_user_set',  # Unique related name
-        blank=True
+        "auth.Permission",
+        related_name="gotmail_user_set",  # Unique related name
+        blank=True,
     )
+    
+    def generate_password_reset_token(self):
+        self.password_reset_token = str(uuid.uuid4())
+        self.password_reset_expires = timezone.now() + timezone.timedelta(hours=1)
+        self.save()
+    
+    def generate_verification_code(self):
+        self.verification_code = str(uuid.uuid4())[:6]
+        self.verification_code_expires = timezone.now() + timezone.timedelta(minutes=10)
+        self.save()
 
     def __str__(self):
         return self.phone_number
-    
+
     def generate_session_token(self):
+        """
+        Generate a unique session token.
+
+        Returns:
+            str: A unique UUID-based session token
+        """
         print("Generating session token")
         self.session_token = str(uuid.uuid4())
         self.session_expiry = timezone.now() + timezone.timedelta(days=30)
         self.save()
-    
-    def change_password(self, new_password):
-        self.set_password(new_password)
-        self.save()
-
-    def enable_two_step_verification(self):
-        self.two_step_verification_enabled = True
-        self.save()
-
-    def disable_two_step_verification(self):
-        self.two_step_verification_enabled = False
-        self.save()
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
@@ -95,27 +108,15 @@ class UserProfile(models.Model):
     bio = models.TextField(blank=True)  # Add a bio field
     birthdate = models.DateField(blank=True, null=True)  # Add birthdate field
     two_factor_enabled = models.BooleanField(default=False)
-    two_factor_secret = models.CharField(max_length=255, blank=True, null=True)
-    
-    password_reset_token = models.CharField(max_length=255, blank=True, null=True)
-    password_reset_expires = models.DateTimeField(blank=True, null=True)
-
-    def __str__(self):
-        return f"Profile for {self.user.phone_number}"
-    
-    def generate_password_reset_token(self):
-        self.password_reset_token = str(uuid.uuid4())
-        self.password_reset_expires = timezone.now() + timezone.timedelta(hours=1)
-        self.save()
-
-
 
 class Email(models.Model):
     message_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     sender = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="emails_sent"
     )
-    recipients = models.ManyToManyField(User, related_name="emails_received", blank=True)
+    recipients = models.ManyToManyField(
+        User, related_name="emails_received", blank=True
+    )
     cc = models.ManyToManyField(User, related_name="emails_cc", blank=True)
     bcc = models.ManyToManyField(User, related_name="emails_bcc", blank=True)
     subject = models.CharField(max_length=255)
@@ -126,81 +127,38 @@ class Email(models.Model):
     is_starred = models.BooleanField(default=False)  # Starred emails
     is_draft = models.BooleanField(default=False)  # Drafts
     is_trashed = models.BooleanField(default=False)  # Trashed emails
-    is_auto_replied = models.BooleanField(default=False) # Auto-reply email
+    is_auto_replied = models.BooleanField(default=False)  # Auto-reply email
 
     reply_to = models.ForeignKey(
         "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies"
     )
-    # Add headers field for storing metadata (optional):
     headers = models.JSONField(blank=True, null=True)  # Stores metadata like message-id
-    
-    # Expanded status tracking
-    STATUS_CHOICES = [
-        ('unread', 'Unread'),
-        ('read', 'Read'),
-        ('replied', 'Replied'),
-        ('forwarded', 'Forwarded')
-    ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unread')
-    
-    MAILBOX_CHOICES = [
-        ('inbox', 'Inbox'),
-        ('sent', 'Sent'),
-        ('draft', 'Draft'),
-        ('trash', 'Trash')
-    ]
-    
-    mailbox = models.CharField(
-        max_length=20, 
-        choices=MAILBOX_CHOICES, 
-        default='inbox'
-    )
 
     def __str__(self):
         return f"Email from {self.sender} to {self.recipients.all()} - {self.subject}"
-    
+
     def can_view(self, user):
-        return (self.sender == user or 
-                user in self.recipients.all() or 
-                user in self.cc.all() or 
-                user in self.bcc.all())
-    
-    def mark_as_read(self):
-        self.is_read = True
-        self.status = 'read'
-        self.save()
-
-    def star(self):
-        self.is_starred = True
-        self.save()
-
-    def move_to_trash(self):
-        self.is_trashed = True
-        self.save()
-    
-    def move_to_mailbox(self, mailbox):
-        """Move email to specified mailbox"""
-        self.mailbox = mailbox
-        self.save()
+        return (
+            self.sender == user
+            or user in self.recipients.all()
+            or user in self.cc.all()
+            or user in self.bcc.all()
+        )
 
 
 class Attachment(models.Model):
     def validate_file_size(value):
         filesize = value.size
-        
+
         if filesize > 10 * 1024 * 1024:  # 10MB limit
             raise ValidationError("The maximum file size that can be uploaded is 10MB")
-        
-    file = models.FileField(
-        upload_to="attachments/", 
-        validators=[validate_file_size]
-    )
+
+    file = models.FileField(upload_to="attachments/", validators=[validate_file_size])
     filename = models.CharField(max_length=255)
     content_type = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.filename
-    
 
 
 class Label(models.Model):
@@ -237,11 +195,11 @@ class UserSettings(models.Model):
     dark_mode = models.BooleanField(default=False)
     auto_reply_enabled = models.BooleanField(default=False)
     auto_reply_message = models.TextField(blank=True, null=True)
-    
+
     # Auto-reply scheduling
     auto_reply_start_date = models.DateTimeField(blank=True, null=True)
     auto_reply_end_date = models.DateTimeField(blank=True, null=True)
-    
+
     def __str__(self):
         return f"Settings for {self.user.phone_number}"
 
@@ -256,3 +214,26 @@ class UserSettings(models.Model):
     def disable_auto_reply(self):
         self.auto_reply_enabled = False
         self.save()
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="notifications"
+    )
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    notification_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("email", "Email"),
+            ("system", "System"),
+            # Add more types as needed
+        ],
+    )
+    related_email = models.ForeignKey(
+        Email, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]

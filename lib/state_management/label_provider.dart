@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../utils/api_pipeline.dart';
+
 import '../constants.dart';
 import '../data_classes.dart';
+import '../utils/api_pipeline.dart';
 
 class LabelProvider extends ChangeNotifier {
   List<EmailLabel> _labels = [];
@@ -25,12 +26,12 @@ class LabelProvider extends ChangeNotifier {
         method: 'GET',
       );
 
-      print(responseData);
+      // print(responseData);
 
       _labels = (responseData as List)
           .map((labelData) => EmailLabel.fromJson(labelData))
           .toList();
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -42,7 +43,7 @@ class LabelProvider extends ChangeNotifier {
 
   // Create a new label
   Future<bool> createLabel({
-    required String name, 
+    required String name,
     required String color,
   }) async {
     try {
@@ -92,15 +93,14 @@ class LabelProvider extends ChangeNotifier {
 
       // Update the label in the local list
       final index = _labels.indexWhere(
-        (label) => label.displayName == originalLabel.displayName
-      );
-      
+          (label) => label.displayName == originalLabel.displayName);
+
       if (index != -1) {
         _labels[index] = EmailLabel.fromJson(responseData);
         notifyListeners();
         return true;
       }
-      
+
       return false;
     } catch (e) {
       _errorMessage = 'Error updating label: ${e.toString()}';
@@ -124,9 +124,7 @@ class LabelProvider extends ChangeNotifier {
       );
 
       // Remove the label from the local list
-      _labels.removeWhere(
-        (existingLabel) => existingLabel.id == label.id
-      );
+      _labels.removeWhere((existingLabel) => existingLabel.id == label.id);
       notifyListeners();
       return true;
     } catch (e) {
@@ -140,8 +138,7 @@ class LabelProvider extends ChangeNotifier {
   EmailLabel? findLabelByName(String name) {
     try {
       return _labels.firstWhere(
-        (label) => label.displayName.toLowerCase() == name.toLowerCase()
-      );
+          (label) => label.displayName.toLowerCase() == name.toLowerCase());
     } catch (e) {
       return null;
     }

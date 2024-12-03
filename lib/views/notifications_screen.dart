@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_email/data_classes.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'gmail_base_screen.dart';
-import '../other_widgets/notif.dart';
-import '../state_management/notif_provider.dart';
+import '../constants.dart';
+import '../state_management/email_provider.dart';
+import '../state_management/notification_provider.dart';
 
-class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+class EmailNotifications extends StatefulWidget {
+  const EmailNotifications({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  State<EmailNotifications> createState() => _EmailNotificationsState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _EmailNotificationsState extends State<EmailNotifications> {
   @override
   void initState() {
     super.initState();
-    // Fetch notifications when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotifsProvider>(context, listen: false).fetchNotifs();
+      Provider.of<UserNotificationProvider>(context, listen: false)
+          .fetchNotifications();
     });
   }
 
@@ -28,29 +30,67 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     return GmailBaseScreen(
       title: AppLocalizations.of(context)!.notifications,
-      body: Consumer<NotifsProvider>(
-        builder: (context, notifsProvider, child) {
-          if (notifsProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      addDrawer: false,
+      body: Column(
+        children: [
+          Expanded(
+            child: Consumer<UserNotificationProvider>(
+              builder: (context, notificationProvider, child) =>
+                  getNotifBuilder(context, notificationProvider, child),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-          if (notifsProvider.hasError) {
-            return Center(child: Text(notifsProvider.errorMessage));
-          }
+  getNotifBuilder(
+    BuildContext context,
+    UserNotificationProvider notificationProvider,
+    Widget? child,
+  ) {
+    return ListView.separated(
+      itemCount: notificationProvider.notifications.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final notification = notificationProvider.notifications[index];
+        return getNotificationTile(notification, notificationProvider, context);
+      },
+    );
+  }
 
-          return ListView.builder(
-            itemCount: notifsProvider.notifs.length,
-            itemBuilder: (context, index) {
-              final notif = notifsProvider.notifs[index];
-              return getNotifTile(
-                notif,
-                () {},
-                context,
-              );
+  ListTile getNotificationTile(
+    UserNotification notification,
+    UserNotificationProvider notificationProvider,
+    BuildContext context,
+  ) {
+    return ListTile(
+      leading: Icon(
+        notification.isRead ? Icons.mark_email_read : Icons.mark_email_unread,
+        color: notification.isRead ? Colors.grey : Colors.blue,
+      ),
+      title: Text(notification.message),
+      subtitle: Text(notification.createdAt.toString()),
+      onTap: () {
+        notificationProvider.updateNotificationReadStatus(
+          notification.id,
+          !notification.isRead,
+        );
+        if (!notification.isRead) {
+          Navigator.pushNamed(
+            context,
+            MailRoutes.EMAIL_DETAIL.value,
+            arguments: {
+              "email": Provider.of<EmailsProvider>(context, listen: false)
+                  .emails
+                  .firstWhere(
+                    (email) => email.message_id == notification.emailID,
+                  ),
+              "mailbox": MailBox.INBOX.value
             },
           );
-        },
-      ),
+        }
+      },
     );
   }
 }

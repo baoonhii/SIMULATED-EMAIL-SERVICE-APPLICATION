@@ -67,60 +67,63 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
                   const SizedBox(height: 16),
                   getConfirmPasswordField(context),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        final firstName = _nameController.text;
-                        final lastName = _surnameController.text;
-                        final email = _emailController.text;
-                        final phoneNumber = _phoneController.text;
-                        final password = _passwordController.text;
-                        final password2 = _confirmPasswordController.text;
-
-                        try {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          Provider.of<AccountProvider>(context, listen: false)
-                              .register(
-                            firstName: firstName,
-                            lastName: lastName,
-                            email: email,
-                            phoneNumber: phoneNumber,
-                            password: password,
-                            password2: password2,
-                          );
-                        } catch (e) {
-                          showSnackBar(
-                            context,
-                            'Registration failed: ${e.toString()}',
-                          );
-                        } finally {
-                          setState(() {
-                            _isLoading = false;
-                          });
-                        }
-
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AuthRoutes.LOGIN.value,
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18),
-                    ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : Text(AppLocalizations.of(context)!.continueNext),
-                  ),
+                  getRegisterButton(context),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  ElevatedButton getRegisterButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        if (_formKey.currentState!.validate()) {
+          final firstName = _nameController.text;
+          final lastName = _surnameController.text;
+          final email = _emailController.text;
+          final phoneNumber = _phoneController.text;
+          final password = _passwordController.text;
+          final password2 = _confirmPasswordController.text;
+
+          try {
+            setState(() {
+              _isLoading = true;
+            });
+            Provider.of<AccountProvider>(context, listen: false).register(
+              firstName: firstName,
+              lastName: lastName,
+              email: email,
+              phoneNumber: phoneNumber,
+              password: password,
+              password2: password2,
+            );
+          } catch (e) {
+            showSnackBar(
+              context,
+              '${AppLocalizations.of(context)!.registrationFailed} ${e.toString()}',
+            );
+          } finally {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+
+          Navigator.pushReplacementNamed(
+            context,
+            AuthRoutes.LOGIN.value,
+          );
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        textStyle: const TextStyle(fontSize: 18),
+      ),
+      child: _isLoading
+          ? const CircularProgressIndicator()
+          : Text(AppLocalizations.of(context)!.continueNext),
     );
   }
 
@@ -134,10 +137,10 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please confirm your password';
+          return AppLocalizations.of(context)!.pleaseConfirmPassword;
         }
         if (value != _passwordController.text) {
-          return 'Passwords do not match';
+          return AppLocalizations.of(context)!.passwordConfirmNotMatch;
         }
         return null;
       },
@@ -154,7 +157,7 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your password';
+          return AppLocalizations.of(context)!.pleaseEnterPassword;
         }
         return null;
       },
@@ -170,7 +173,7 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your email';
+          return AppLocalizations.of(context)!.pleaseEnterEmail;
         }
         return null;
       },
@@ -180,13 +183,13 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
   TextFormField getPhoneField() {
     return TextFormField(
       controller: _phoneController,
-      decoration: const InputDecoration(
-        labelText: 'Phone Number',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.phoneNumber,
+        border: const OutlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your phone number';
+          return AppLocalizations.of(context)!.pleaseEnterPhone;
         }
         return null;
       },
@@ -196,13 +199,13 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
   TextFormField getSurnameField() {
     return TextFormField(
       controller: _surnameController,
-      decoration: const InputDecoration(
-        labelText: 'Surname',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.lastName,
+        border: const OutlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your surname';
+          return AppLocalizations.of(context)!.pleaseEnterFirstName;
         }
         return null;
       },
@@ -212,13 +215,13 @@ class _GmailRegisterScreenState extends State<GmailRegisterScreen> {
   TextFormField getNameField() {
     return TextFormField(
       controller: _nameController,
-      decoration: const InputDecoration(
-        labelText: 'Name',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.firstName,
+        border: const OutlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your name';
+          return AppLocalizations.of(context)!.pleaseEnterLastName;
         }
         return null;
       },

@@ -150,7 +150,7 @@ Future<dynamic> uploadImage({
       return json.decode(response.body);
     } else {
       final errorData = json.decode(response.body);
-      throw Exception(errorData['detail'] ?? 'File upload failed');
+      throw Exception(errorData['error'] ?? 'File upload failed');
     }
   } catch (e) {
     print('File Upload Error: $e');

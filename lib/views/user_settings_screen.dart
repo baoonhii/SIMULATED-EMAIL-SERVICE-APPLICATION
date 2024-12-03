@@ -111,20 +111,11 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
               leading: const Icon(Icons.lock, color: Colors.blue),
               title: Text(AppLocalizations.of(context)!.changePassword),
               trailing: const Icon(Icons.lock_open),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, SettingsRoutes.PASSWORD_RESET.value);
+              },
             ),
           ),
-          // Card(
-          //   margin: const EdgeInsets.all(8),
-          //   child: ListTile(
-          //     leading: const Icon(Icons.notifications, color: Colors.blue),
-          //     title: Text(AppLocalizations.of(context)!.notifSettings),
-          //     trailing: const Icon(Icons.arrow_forward),
-          //     onTap: () {
-          //       Navigator.pushNamed(context, SettingsRoutes.NOTIF.value);
-          //     },
-          //   ),
-          // ),
           Card(
             margin: const EdgeInsets.all(8),
             child: ListTile(
@@ -157,6 +148,28 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
                 Navigator.pushNamed(context, SettingsRoutes.COMPOSEPREF.value);
+              },
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.all(8),
+            child: ListTile(
+              leading: const Icon(Icons.phone, color: Colors.blue),
+              title: Text(AppLocalizations.of(context)!.verifyPhoneNumber),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, SettingsRoutes.VERIFYPHONE.value);
+              },
+            ),
+          ),
+          Card(
+            margin: const EdgeInsets.all(8),
+            child: ListTile(
+              leading: const Icon(Icons.security, color: Colors.blue),
+              title: Text(AppLocalizations.of(context)!.enable2FA),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, SettingsRoutes.ENABLE_2FA.value);
               },
             ),
           ),

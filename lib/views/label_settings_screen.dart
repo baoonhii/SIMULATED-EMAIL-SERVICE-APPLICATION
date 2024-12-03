@@ -46,47 +46,64 @@ class _LabelManagementScreenState extends State<LabelManagementScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(action == LabelManagementAction.create
-            ? AppLocalizations.of(context)!.createLabel
-            : AppLocalizations.of(context)!.editLabel),
+        title: Text(getLabelActionText(action, context)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _labelNameController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.labelName,
-              ),
-            ),
+            getLabelNameField(context),
             const SizedBox(height: 16),
-            // Color picker
-            ColorPicker(
-              pickerColor: _selectedColor,
-              onColorChanged: (Color color) {
-                setState(() {
-                  _selectedColor = color;
-                });
-              },
-              pickerAreaHeightPercent: 0.8,
-            ),
+            getColorPicker(),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_labelNameController.text.isNotEmpty) {
-                _handleLabelAction(action, existingLabel);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.saveSettingChanges),
-          ),
+          getCancelButton(context),
+          getSaveLabelButton(action, existingLabel, context),
         ],
       ),
+    );
+  }
+
+  String getLabelActionText(
+    LabelManagementAction action,
+    BuildContext context,
+  ) {
+    return action == LabelManagementAction.create
+        ? AppLocalizations.of(context)!.createLabel
+        : AppLocalizations.of(context)!.editLabel;
+  }
+
+  TextField getLabelNameField(BuildContext context) {
+    return getTextField(
+      _labelNameController,
+      AppLocalizations.of(context)!.labelName,
+    );
+  }
+
+  ColorPicker getColorPicker() {
+    return ColorPicker(
+      pickerColor: _selectedColor,
+      onColorChanged: (Color color) {
+        setState(() {
+          _selectedColor = color;
+        });
+      },
+      pickerAreaHeightPercent: 0.8,
+    );
+  }
+
+  ElevatedButton getSaveLabelButton(
+    LabelManagementAction action,
+    EmailLabel? existingLabel,
+    BuildContext context,
+  ) {
+    return ElevatedButton(
+      onPressed: () {
+        if (_labelNameController.text.isNotEmpty) {
+          _handleLabelAction(action, existingLabel);
+          Navigator.of(context).pop();
+        }
+      },
+      child: Text(AppLocalizations.of(context)!.saveSettingChanges),
     );
   }
 
@@ -97,19 +114,30 @@ class _LabelManagementScreenState extends State<LabelManagementScreen> {
         title: Text(AppLocalizations.of(context)!.deleteLabel),
         content: Text(AppLocalizations.of(context)!.deleteConfirmation),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _handleLabelAction(LabelManagementAction.delete, existingLabel);
-              Navigator.of(context).pop();
-            },
-            child: Text(AppLocalizations.of(context)!.delete),
-          ),
+          getCancelButton(context),
+          getDeleteConfirmButton(existingLabel, context),
         ],
       ),
+    );
+  }
+
+  ElevatedButton getDeleteConfirmButton(
+    EmailLabel? existingLabel,
+    BuildContext context,
+  ) {
+    return ElevatedButton(
+      onPressed: () {
+        _handleLabelAction(LabelManagementAction.delete, existingLabel);
+        Navigator.of(context).pop();
+      },
+      child: Text(AppLocalizations.of(context)!.delete),
+    );
+  }
+
+  TextButton getCancelButton(BuildContext context) {
+    return TextButton(
+      onPressed: () => Navigator.of(context).pop(),
+      child: Text(AppLocalizations.of(context)!.cancel),
     );
   }
 
@@ -150,11 +178,7 @@ class _LabelManagementScreenState extends State<LabelManagementScreen> {
       if (mounted) {
         showSnackBar(
           context,
-          action == LabelManagementAction.create
-              ? AppLocalizations.of(context)!.labelCreated
-              : action == LabelManagementAction.edit
-                  ? AppLocalizations.of(context)!.labelUpdated
-                  : AppLocalizations.of(context)!.labelDeleted,
+          getLabelSuccessText(action),
         );
       }
     } else {
@@ -165,6 +189,14 @@ class _LabelManagementScreenState extends State<LabelManagementScreen> {
         );
       }
     }
+  }
+
+  String getLabelSuccessText(LabelManagementAction action) {
+    return action == LabelManagementAction.create
+        ? AppLocalizations.of(context)!.labelCreated
+        : action == LabelManagementAction.edit
+            ? AppLocalizations.of(context)!.labelUpdated
+            : AppLocalizations.of(context)!.labelDeleted;
   }
 
   @override
@@ -178,57 +210,70 @@ class _LabelManagementScreenState extends State<LabelManagementScreen> {
         child: const Icon(Icons.add),
       ),
       body: Consumer<LabelProvider>(
-        builder: (context, labelProvider, child) {
-          // Show loading indicator
-          if (labelProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        builder: labelManagementBuilder,
+      ),
+    );
+  }
 
-          // Show error message if there's an error
-          if (labelProvider.errorMessage.isNotEmpty) {
-            return Center(
-              child: Text(
-                labelProvider.errorMessage,
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
+  Widget labelManagementBuilder(context, labelProvider, child) {
+    // Show loading indicator
+    if (labelProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          // Show labels list
-          return ListView.builder(
-            itemCount: labelProvider.labels.length,
-            itemBuilder: (context, index) {
-              final label = labelProvider.labels[index];
-              return ListTile(
-                leading: Container(
-                  width: 24,
-                  height: 24,
-                  color: label.color,
-                ),
-                title: Text(label.displayName),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _showLabelDialog(
-                        action: LabelManagementAction.edit,
-                        existingLabel: label,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _showLabelDialog(
-                        action: LabelManagementAction.delete,
-                        existingLabel: label,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+    // Show error message if there's an error
+    if (labelProvider.errorMessage.isNotEmpty) {
+      return Center(
+        child: Text(
+          labelProvider.errorMessage,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: labelProvider.labels.length,
+      itemBuilder: (context, index) {
+        final label = labelProvider.labels[index];
+        return getLabelTile(label);
+      },
+    );
+  }
+
+  ListTile getLabelTile(EmailLabel label) {
+    return ListTile(
+      leading: Container(
+        width: 24,
+        height: 24,
+        color: label.color,
+      ),
+      title: Text(label.displayName),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          getEditLabelButton(label),
+          getDeleteLabelButton(label),
+        ],
+      ),
+    );
+  }
+
+  IconButton getDeleteLabelButton(EmailLabel label) {
+    return IconButton(
+      icon: const Icon(Icons.delete),
+      onPressed: () => _showLabelDialog(
+        action: LabelManagementAction.delete,
+        existingLabel: label,
+      ),
+    );
+  }
+
+  IconButton getEditLabelButton(EmailLabel label) {
+    return IconButton(
+      icon: const Icon(Icons.edit),
+      onPressed: () => _showLabelDialog(
+        action: LabelManagementAction.edit,
+        existingLabel: label,
       ),
     );
   }

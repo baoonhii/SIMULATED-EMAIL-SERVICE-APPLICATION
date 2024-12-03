@@ -6,7 +6,9 @@ import '../constants.dart';
 import '../data_classes.dart';
 import '../other_widgets/drawer.dart';
 import '../other_widgets/general.dart';
+import '../other_widgets/notification.dart';
 import '../state_management/account_provider.dart';
+import '../state_management/notification_provider.dart';
 
 class GmailDrawer extends StatelessWidget {
   const GmailDrawer({
@@ -17,6 +19,7 @@ class GmailDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final accountProvider = Provider.of<AccountProvider>(context);
     final currentAccount = accountProvider.currentAccount!;
+    final notificationProvider = Provider.of<UserNotificationProvider>(context);
 
     Color textColor = Theme.of(context).colorScheme.onSecondary;
     Color iconColor = Theme.of(context).iconTheme.color!;
@@ -44,11 +47,11 @@ class GmailDrawer extends StatelessWidget {
     }
 
     Map<String, Map<String, dynamic>> drawerGroup_1 = {
-      "drafts": {
-        "icon": Icons.drafts,
-        "titleKey": AppLocalizations.of(context)!.drafts,
-        "route": MailSubroutes.DRAFT.value
-      },
+      // "drafts": {
+      //   "icon": Icons.drafts,
+      //   "titleKey": AppLocalizations.of(context)!.drafts,
+      //   "route": MailSubroutes.DRAFT.value
+      // },
       "sent": {
         "icon": Icons.send,
         "titleKey": AppLocalizations.of(context)!.sent,
@@ -71,6 +74,11 @@ class GmailDrawer extends StatelessWidget {
         "icon": Icons.delete,
         "titleKey": AppLocalizations.of(context)!.spam,
         "route": MailSubroutes.SPAM.value
+      },
+      "draft": {
+        "icon": Icons.drafts,
+        "titleKey": AppLocalizations.of(context)!.drafts,
+        "route": MailRoutes.DRAFT.value
       },
       "allMail": {
         "icon": Icons.all_inbox,
@@ -95,6 +103,18 @@ class GmailDrawer extends StatelessWidget {
             titleKey: AppLocalizations.of(context)!.inbox,
             route: MailRoutes.INBOX.value,
             isReplacement: true,
+          ),
+          Stack(
+            children: [
+              drawerItem(
+                null,
+                icon: Icons.notifications,
+                titleKey: AppLocalizations.of(context)!.notifications,
+                route: MailRoutes.NOTIF.value,
+              ),
+              if (notificationProvider.unreadNotificationsCount > 0)
+                getUnreadNotifBubble(notificationProvider),
+            ],
           ),
           ...drawerGroup_1.values.map((value) {
             return drawerItem(

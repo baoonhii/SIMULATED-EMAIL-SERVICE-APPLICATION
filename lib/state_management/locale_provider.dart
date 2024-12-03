@@ -13,7 +13,7 @@ class LocaleProvider extends ChangeNotifier {
   void _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     String? languageCode = prefs.getString('languageCode');
-    
+
     if (languageCode != null) {
       _locale = Locale(languageCode);
       notifyListeners();

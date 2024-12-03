@@ -20,35 +20,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure--4*8pa%#^x67*j=l#=kbowawdc(x%-$y@zm2dtu_r(g&jn5tk_"
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']# type: ignore
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2"]  # type: ignore
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',  
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'daphne',
-    'django.contrib.staticfiles',
-    'corsheaders',
-    
-    # Your custom apps and other third-party apps
-    'gotmail_service',
-    'channels',
-    'rest_framework',
-    'django_otp',
-    'django_otp.plugins.otp_static',
-    'django_otp.plugins.otp_totp',
-    'two_factor',
-    'two_factor.plugins.phonenumber',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "daphne",
+    "django.contrib.staticfiles",
+    "corsheaders",
+    "gotmail_service",
+    "channels",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -59,8 +52,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "GotMail.urls"
@@ -68,7 +61,7 @@ ROOT_URLCONF = "GotMail.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -83,11 +76,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "GotMail.wsgi.application"
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6380)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-from .super_secrets import DB_PASSWORD
+from .super_secrets import DB_PASSWORD, DJANGO_SECRET_KEY, gmail_app_password, gmail_app_email
 
 DATABASES = {
     "default": {
@@ -100,6 +101,7 @@ DATABASES = {
     }
 }
 
+SECRET_KEY = DJANGO_SECRET_KEY
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -144,38 +146,36 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ASGI_APPLICATION = "GotMail.asgi.application"
 
-AUTH_USER_MODEL = 'gotmail_service.User'
+AUTH_USER_MODEL = "gotmail_service.User"
 
-LOGIN_URL = 'login'
-LOGOUT_URL = 'logout'
+LOGIN_URL = "login"
+LOGOUT_URL = "logout"
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'static'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "static"
 
-MEDIA_ROOT = 'user_res'
+MEDIA_ROOT = "user_res"
 
-MEDIA_URL = '/user_res/'
+MEDIA_URL = "/user_res/"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 
-
-CORS_ALLOWED_ORIGINS  = [
+CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:54391",
+    "http://10.0.2.2",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOW_METHODS = [ # required if making other types of requests besides GET
+CORS_ALLOW_METHODS = [  # required if making other types of requests besides GET
     "DELETE",
     "GET",
     "OPTIONS",
@@ -192,3 +192,11 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Important if you're using cookies or authentication that relies on credentials
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = gmail_app_email
+EMAIL_HOST_PASSWORD = gmail_app_password  
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

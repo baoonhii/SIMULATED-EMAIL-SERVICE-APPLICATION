@@ -8,6 +8,8 @@ import '../utils/validators.dart';
 import '../other_widgets/general.dart';
 import '../views/gmail_base_screen.dart';
 import '../state_management/account_provider.dart';
+import '../views/password_management_screen.dart';
+import '../views/two_factor_verify_screen.dart';
 
 class GmailLoginScreen extends StatefulWidget {
   const GmailLoginScreen({super.key});
@@ -18,7 +20,7 @@ class GmailLoginScreen extends StatefulWidget {
 
 class _GmailLoginScreenState extends State<GmailLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   final FocusNode _focusNode = FocusNode();
@@ -34,13 +36,15 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   }
 
   Future<void> _checkSession() async {
-    final accountProvider =
-        Provider.of<AccountProvider>(context, listen: false);
+    final accountProvider = Provider.of<AccountProvider>(
+      context,
+      listen: false,
+    );
 
     try {
       final isValid = await accountProvider.isSessionValid();
 
-      if (isValid) {
+      if (isValid & mounted) {
         // Session is valid, navigate to inbox
         if (mounted) {
           Navigator.pushReplacementNamed(
@@ -55,7 +59,6 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         });
       }
     } catch (e) {
-      // Handle session check error
       setState(() {
         _isCheckingSession = false;
       });
@@ -69,7 +72,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
         _isLoading = true;
       });
 
-      final phoneNumber = _emailController.text;
+      final phoneNumber = _phoneController.text;
       final password = _passwordController.text;
 
       try {
@@ -77,12 +80,30 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
           phoneNumber,
           password,
           () {
-            // Callback on success
-            print("Navigating to inbox");
+            // Normal login success
             if (mounted) {
               Navigator.pushReplacementNamed(
                 context,
                 MailRoutes.INBOX.value,
+              );
+            }
+          },
+          onTwoFactorRequired: (String phoneNumber) {
+            // Navigate to 2FA verification screen
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TwoFactorVerificationScreen(
+                    phoneNumber: phoneNumber,
+                    onSuccess: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        MailRoutes.INBOX.value,
+                      );
+                    },
+                  ),
+                ),
               );
             }
           },
@@ -105,7 +126,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -125,7 +146,7 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
                 child: ListView(
                   children: [
                     const SizedBox(height: 20),
-                    getEmailField(),
+                    getPhoneField(),
                     const SizedBox(height: 16),
                     getPasswordField(),
                     const SizedBox(height: 24),
@@ -157,15 +178,14 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
     );
   }
 
-  TextFormField getEmailField() {
+  TextFormField getPhoneField() {
     return TextFormField(
-      controller: _emailController,
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        border: OutlineInputBorder(),
+      controller: _phoneController,
+      decoration: InputDecoration(
+        labelText: AppLocalizations.of(context)!.phoneNumber,
+        border: const OutlineInputBorder(),
       ),
-      keyboardType: TextInputType.emailAddress,
-      validator: emailValidator,
+      keyboardType: TextInputType.phone,
     );
   }
 
@@ -194,7 +214,6 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   TextButton getRegisterButton() {
     return TextButton(
       onPressed: () {
-        // Create account logic
         Navigator.pushNamed(context, AuthRoutes.REGISTER.value);
       },
       child: Text(AppLocalizations.of(context)!.createAccount),
@@ -204,7 +223,14 @@ class _GmailLoginScreenState extends State<GmailLoginScreen> {
   TextButton getForgetPasswordButton() {
     return TextButton(
       onPressed: () {
-        // Forgot password logic
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PasswordScreen(
+              screenType: PasswordScreenType.forgetPassword,
+            ),
+          ),
+        );
       },
       child: Text("${AppLocalizations.of(context)!.forgotPassword}?"),
     );

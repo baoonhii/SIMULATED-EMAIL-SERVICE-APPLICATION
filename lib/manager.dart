@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'constants.dart';
-import 'data_classes.dart';
 import 'auth/login.dart';
+import 'auth/register.dart';
+import 'views/draft_screen.dart';
 import 'views/mail_folder_screen.dart';
 import 'views/gmail_inbox_screen.dart';
 import 'views/edit_profile_screen.dart';
 import 'views/notifications_screen.dart';
+import 'views/two_factor_screen.dart';
 import 'views/user_settings_screen.dart';
 import 'views/label_settings_screen.dart';
-import 'views/gmail_register_screen.dart';
 import 'views/gmail_email_pref_screen.dart';
 import 'views/gmail_email_detail_screen.dart';
 import 'views/gmail_compose_email_screen.dart';
 import 'views/auto_reply_settings_screen.dart';
+import 'views/verify_phone_screen.dart';
 
 PageRouteBuilder getRouterManager(
   RouteSettings settings,
@@ -64,10 +66,12 @@ class MainManager extends RouterManager {
       AuthRoutes.LOGIN.value: (context) => const GmailLoginScreen(),
       MailRoutes.INBOX.value: (context) => const GmailInboxScreen(),
       MailRoutes.EMAIL_DETAIL.value: (context) => GmailEmailDetailScreen(
-            email: arguments as Email,
+            email: (arguments as Map)["email"],
+            mailbox: arguments["mailbox"],
           ),
-      MailRoutes.NOTIF.value: (context) => const NotificationsScreen(),
+      MailRoutes.NOTIF.value: (context) => const EmailNotifications(),
       MailRoutes.COMPOSE.value: (context) => const EmailComposeScreen(),
+      MailRoutes.DRAFT.value: (context) => const DraftsScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
@@ -83,7 +87,9 @@ class SubManager extends RouterManager {
   }) {
     final Map<String, WidgetBuilder> routeMap = {
       MailSubroutes.SENT.value: (context) => const GmailSentScreen(),
+      MailSubroutes.STARRED.value: (context) => const GmailStarredScreen(),
       MailSubroutes.TRASH.value: (context) => const GmailTrashScreen(),
+      MailSubroutes.ALL.value: (context) => const GmailAllScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();
@@ -106,6 +112,10 @@ class SettingManager extends RouterManager {
       SettingsRoutes.EDITPROFILE.value: (context) => const EditProfileScreen(),
       SettingsRoutes.COMPOSEPREF.value: (context) => const EmailPrefScreen(),
       SettingsRoutes.LABELS.value: (context) => const LabelManagementScreen(),
+      SettingsRoutes.VERIFYPHONE.value: (context) => const VerifyPhoneScreen(),
+      SettingsRoutes.ENABLE_2FA.value: (context) => const Enable2FAScreen(),
+      // SettingsRoutes.PASSWORD_RESET.value: (context) =>
+      //     const PasswordResetScreen(),
     };
 
     WidgetBuilder builder = routeMap[path] ?? (context) => const Screen404();

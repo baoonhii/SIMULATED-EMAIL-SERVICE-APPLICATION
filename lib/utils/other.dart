@@ -30,4 +30,3 @@ String getRandomizedName(
   }
   return randomizedFilename;
 }
-

@@ -25,7 +25,7 @@ class EmailAttachment {
     return EmailAttachment(
       file_id: json['id'],
       filename: json['filename'],
-      file_url: json['file_url'],
+      file_url: json['file'],
     );
   }
 }
@@ -35,7 +35,11 @@ class EmailLabel {
   final String displayName;
   final Color color;
 
-  EmailLabel({required this.id, required this.displayName, required this.color});
+  EmailLabel({
+    required this.id,
+    required this.displayName,
+    required this.color,
+  });
 
   // Add a method to convert color to hex string
   String get colorHex {
@@ -56,7 +60,7 @@ class EmailLabel {
     return {
       'id': id,
       'name': displayName,
-      'color': color,
+      'color': colorHex,
     };
   }
 
@@ -66,18 +70,17 @@ class EmailLabel {
   }
 
   bool operator ==(Object other) =>
-      other is EmailLabel &&
-      other.runtimeType == runtimeType &&
-      other.id == id;
+      other is EmailLabel && other.runtimeType == runtimeType && other.id == id;
 
   @override
   int get hashCode => id.hashCode;
 }
 
-// Updated Email class with labels and additional methods
 class Email {
   final int message_id;
+  final int sender_id;
   final String sender;
+  final String? sender_profile_url;
   final List<String> recipients;
   final List<String> cc;
   final List<String> bcc;
@@ -92,9 +95,16 @@ class Email {
   bool is_auto_replied;
   List<EmailLabel> labels;
 
+  bool operator ==(Object other) =>
+      other is Email &&
+      other.runtimeType == runtimeType &&
+      other.message_id == message_id;
+
   Email({
     required this.message_id,
+    required this.sender_id,
     required this.sender,
+    required this.sender_profile_url,
     required this.recipients,
     this.cc = const [],
     this.bcc = const [],
@@ -114,7 +124,9 @@ class Email {
   factory Email.fromJson(Map<String, dynamic> json) {
     return Email(
       message_id: json['id'],
+      sender_id: json['sender_id'],
       sender: json['sender'],
+      sender_profile_url: json['sender_profile_url'],
       recipients: List<String>.from(json['recipients'] ?? []),
       cc: List<String>.from(json['cc'] ?? []),
       bcc: List<String>.from(json['bcc'] ?? []),
@@ -135,6 +147,28 @@ class Email {
               .toList() ??
           [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': message_id,
+      'sender_id': sender_id,
+      'sender': sender,
+      'sender_profile_url': sender_profile_url,
+      'recipients': recipients,
+      'cc': cc,
+      'bcc': bcc,
+      'subject': subject,
+      'body': body,
+      'sent_at': sent_at.toIso8601String(),
+      'attachments': attachments.map((attach) => attach.toJson()).toList(),
+      'is_read': is_read,
+      'is_starred': is_starred,
+      'is_draft': is_draft,
+      'is_trashed': is_trashed,
+      'is_auto_replied': is_auto_replied,
+      'labels': labels.map((label) => label.toJson()).toList(),
+    };
   }
 
   // Method to toggle read status
@@ -162,22 +196,35 @@ class Email {
   }
 
   // Method to move to trash
-  void moveToTrash() {
-    is_trashed = true;
+  bool toggleTrashStatus() {
+    is_trashed = !is_trashed;
+    return is_trashed;
   }
 }
 
 class Account {
   final String phone_number;
+  final int userID;
   final String email;
   final String first_name;
   final String last_name;
   final String profile_picture;
   final bool is_phone_verified;
 
+  Account({
+    required this.phone_number,
+    required this.userID,
+    required this.email,
+    required this.first_name,
+    required this.last_name,
+    required this.profile_picture,
+    required this.is_phone_verified,
+  });
+
   factory Account.fromJson(Map<String, dynamic> json) {
     return Account(
       phone_number: json['phone_number'],
+      userID: json['id'],
       email: json['email'],
       first_name: json['first_name'],
       last_name: json['last_name'],
@@ -186,18 +233,10 @@ class Account {
     );
   }
 
-  Account({
-    required this.phone_number,
-    required this.email,
-    required this.first_name,
-    required this.last_name,
-    required this.profile_picture,
-    required this.is_phone_verified,
-  });
-
   Map<String, dynamic> toJson() {
     return {
       'phone_number': phone_number,
+      'id': userID,
       'email': email,
       'first_name': first_name,
       'last_name': last_name,
@@ -209,6 +248,29 @@ class Account {
   @override
   String toString() {
     return 'phone_number: $phone_number - email: $email by first_name: $first_name';
+  }
+}
+
+class OtherUserProfile {
+  final String? firstName;
+  final String? lastName;
+  final String? birthdate;
+  final String bio;
+
+  OtherUserProfile({
+    required this.firstName,
+    required this.lastName,
+    required this.birthdate,
+    required this.bio,
+  });
+
+  factory OtherUserProfile.fromJson(Map<String, dynamic> json) {
+    return OtherUserProfile(
+      firstName: json['first_name'],
+      lastName: json['last_name'],
+      birthdate: json['birthdate'],
+      bio: (json['bio'] as String).isEmpty ? "None" : json['bio'],
+    );
   }
 }
 
@@ -269,3 +331,52 @@ class NotificationData {
 enum EmailAction { markRead, star, moveToTrash }
 
 enum LabelManagementAction { create, edit, delete }
+
+class UserNotification {
+  final int id;
+  final String message;
+  bool isRead;
+  final DateTime createdAt;
+  final String notificationType;
+  final int? emailID;
+
+  UserNotification({
+    required this.emailID,
+    required this.id,
+    required this.message,
+    this.isRead = false,
+    required this.createdAt,
+    this.notificationType = 'system',
+  });
+
+  // JSON serialization
+  factory UserNotification.fromJson(Map<String, dynamic> json) {
+    return UserNotification(
+      emailID: json['related_email']['id'],
+      id: json['id'],
+      message: json['message'],
+      isRead: json['is_read'] ?? false,
+      createdAt: DateTime.parse(json['created_at']),
+      notificationType: json['notification_type'] ?? 'system',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'message': message,
+        'is_read': isRead,
+        'created_at': createdAt.toIso8601String(),
+        'notification_type': notificationType,
+      };
+
+  // Optional: Equality and hashCode for proper comparison
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserNotification &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}

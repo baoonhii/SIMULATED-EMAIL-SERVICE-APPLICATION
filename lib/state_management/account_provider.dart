@@ -19,6 +19,9 @@ class AccountProvider extends ChangeNotifier {
   String? get sessionToken => _sessionToken;
   UserProfile? get userProfile => _userProfile;
 
+  UserProfile? _senderProfile;
+  UserProfile? get senderProfile => _senderProfile;
+
   // Method to set the current account
   void setCurrentAccount(Account account) {
     _currentAccount = account;
@@ -85,29 +88,75 @@ class AccountProvider extends ChangeNotifier {
   Future<void> login(
     String phoneNumber,
     String password,
+    VoidCallback onSuccess, {
+    Function(String)? onTwoFactorRequired,
+  }) async {
+    try {
+      final responseData = await makeAPIRequest(
+        url: Uri.parse(API_Endpoints.AUTH_LOGIN.value),
+        method: 'POST',
+        requiresAuth: false,
+        body: {
+          'phone_number': phoneNumber,
+          'password': password,
+        },
+      );
+
+      // Check if two-factor authentication is required
+      if (responseData['requires_2fa'] == true) {
+        if (onTwoFactorRequired != null) {
+          onTwoFactorRequired(responseData['phone_number']);
+        }
+        return;
+      }
+
+      // Regular login flow
+      final user = Account.fromJson(responseData['user']);
+      final sessionToken = responseData['session_token'];
+
+      // Store session token
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('session_token', sessionToken);
+
+      setCurrentAccount(user);
+      _sessionToken = sessionToken;
+
+      onSuccess();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> verify2FA(
+    String phoneNumber,
+    String verificationCode,
     VoidCallback onSuccess,
   ) async {
-    final responseData = await makeAPIRequest(
-      url: Uri.parse(API_Endpoints.AUTH_LOGIN.value),
-      method: 'POST',
-      requiresAuth: false,
-      body: {
-        'phone_number': phoneNumber,
-        'password': password,
-      },
-    );
+    try {
+      final responseData = await makeAPIRequest(
+        url: Uri.parse(API_Endpoints.AUTH_VERIFY_2FA.value),
+        method: 'POST',
+        requiresAuth: false,
+        body: {
+          'phone_number': phoneNumber,
+          'verification_code': verificationCode,
+        },
+      );
 
-    final user = Account.fromJson(responseData['user']);
-    final sessionToken = responseData['session_token'];
+      final user = Account.fromJson(responseData['user']);
+      final sessionToken = responseData['session_token'];
 
-    // Store session token
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('session_token', sessionToken);
+      // Store session token
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('session_token', sessionToken);
 
-    setCurrentAccount(user);
-    _sessionToken = sessionToken;
+      setCurrentAccount(user);
+      _sessionToken = sessionToken;
 
-    onSuccess();
+      onSuccess();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
@@ -177,7 +226,7 @@ class AccountProvider extends ChangeNotifier {
     // Update account and profile
     final updatedUser = Account.fromJson(responseData['user']);
     final updatedProfile = UserProfile.fromJson(
-      responseData['user_profile'] ?? responseData,
+      responseData['profile'] ?? responseData,
     );
 
     setCurrentAccount(updatedUser);

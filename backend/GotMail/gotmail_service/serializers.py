@@ -1,13 +1,43 @@
-from rest_framework import serializers
-from .models import User, UserProfile, Email, Attachment, Label, UserSettings
-from django.contrib.auth.password_validation import validate_password
-from rest_framework.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
+import json
+
 import magic
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
-from django.db import transaction
-import json
+from rest_framework import serializers
+
+from .models import (
+    Attachment,
+    Email,
+    Label,
+    Notification,
+    User,
+    UserProfile,
+    UserSettings,
+)
+
+
+class BaseUserValidationMixin:
+    """
+    Mixin to provide common user-related validation methods.
+    """
+
+    def validate_unique_email(self, email):
+        """
+        Validate that the email is unique across the system.
+        """
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "Email is already registered."})
+
+    def validate_unique_phone(self, phone_number):
+        """
+        Validate that the phone number is unique across the system.
+        """
+        if User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError(
+                {"phone_number": "Phone number is already registered."}
+            )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -27,8 +57,10 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def get_profile_picture(self, obj):
+        """
+        Get the user's profile picture or return a default.
+        """
         try:
-            # Use a default image if no profile picture
             return (
                 obj.profile.profile_picture.url
                 if obj.profile.profile_picture
@@ -60,20 +92,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
         ]
 
     def validate_profile_picture(self, value):
-        # Additional file validation
+        """
+        Advanced validation for profile picture upload.
+        """
         if value:
-            # Check file size (10MB limit)
+            # Validate file size
             if value.size > 10 * 1024 * 1024:
                 raise serializers.ValidationError("Image size should not exceed 10MB.")
 
-            # Validate mime type
+            # Validate file type using python-magic
             file_mime = magic.from_buffer(value.read(2048), mime=True)
             if not file_mime.startswith("image/"):
                 raise serializers.ValidationError("Only image files are allowed.")
         return value
 
 
-class UserRegisterSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(BaseUserValidationMixin, serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -84,10 +118,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         write_only=True, required=True, style={"input_type": "password"}
     )
     verification_code = serializers.CharField(write_only=True, required=False)
-    phone_number = serializers.CharField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
@@ -102,7 +132,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        # Check for missing required fields
+        """
+        Comprehensive validation for user registration.
+        """
+        # Check for required fields
         required_fields = [
             "phone_number",
             "first_name",
@@ -112,36 +145,32 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password2",
         ]
 
-        # Check for missing fields
         missing_fields = [field for field in required_fields if not attrs.get(field)]
+
         if missing_fields:
             raise serializers.ValidationError(
                 {"detail": f"Missing required fields: {', '.join(missing_fields)}"}
             )
 
-        # Check if passwords match
+        # Validate password match
         if attrs.get("password") != attrs.get("password2"):
             raise serializers.ValidationError(
                 {"password": "Password fields didn't match."}
             )
 
-        # Validate unique constraints
-        if User.objects.filter(phone_number=attrs.get("phone_number")).exists():
-            raise serializers.ValidationError(
-                {"phone_number": "Phone number is already registered."}
-            )
-
-        if User.objects.filter(email=attrs.get("email")).exists():
-            raise serializers.ValidationError({"email": "Email is already registered."})
+        # Use mixin methods for unique validation
+        self.validate_unique_phone(attrs.get("phone_number"))
+        self.validate_unique_email(attrs.get("email"))
 
         return attrs
 
     def create(self, validated_data):
-        # Remove fields not needed for user creation
+        """
+        Create a new user with the validated data.
+        """
         validated_data.pop("password2", None)
         validated_data.pop("verification_code", None)
 
-        # Create user with phone number as username
         user = User.objects.create_user(
             username=validated_data["phone_number"],
             phone_number=validated_data["phone_number"],
@@ -221,29 +250,6 @@ class FontSettingsSerializer(serializers.ModelSerializer):
         fields = ["font_size", "font_family"]
 
 
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(
-        required=True, style={"input_type": "password"}
-    )
-    new_password = serializers.CharField(
-        required=True, validators=[validate_password], style={"input_type": "password"}
-    )
-    new_password2 = serializers.CharField(
-        required=True, style={"input_type": "password"}
-    )
-
-    def validate(self, data):
-        user = self.context["request"].user
-
-        if not user.check_password(data["old_password"]):
-            raise ValidationError({"old_password": "Incorrect current password."})
-
-        if data["new_password"] != data["new_password2"]:
-            raise ValidationError({"new_password": "New password fields didn't match."})
-
-        return data
-
-
 class AttachmentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     file_preview = serializers.SerializerMethodField()
@@ -296,6 +302,8 @@ class LabelSerializer(serializers.ModelSerializer):
 
 class EmailSerializer(serializers.ModelSerializer):
     sender = serializers.SlugRelatedField(slug_field="email", read_only=True)
+    sender_id = serializers.SerializerMethodField()
+    sender_profile_url = serializers.SerializerMethodField()
     recipients = serializers.SlugRelatedField(
         slug_field="email", many=True, read_only=True
     )
@@ -310,6 +318,8 @@ class EmailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "sender",
+            "sender_id",
+            "sender_profile_url",
             "recipients",
             "cc",
             "bcc",
@@ -330,6 +340,18 @@ class EmailSerializer(serializers.ModelSerializer):
     def get_is_reply(self, obj):
         return obj.reply_to is not None
 
+    def get_sender_id(self, obj):
+        return obj.sender.id
+
+    def get_sender_profile_url(self, obj):
+        sender_profile = UserProfile.objects.filter(user=obj.sender).first()
+        return (
+            sender_profile.profile_picture.url
+            if sender_profile and sender_profile.profile_picture
+            # else None
+            else "/user_res/profile_pictures/dog.png"
+        )
+
 
 class CreateEmailSerializer(serializers.ModelSerializer):
     recipients = serializers.JSONField(write_only=True)
@@ -349,6 +371,7 @@ class CreateEmailSerializer(serializers.ModelSerializer):
             "body",
             "attachments",
             "is_draft",
+            "reply_to",
         ]
 
     def validate(self, attrs):
@@ -385,66 +408,68 @@ class CreateEmailSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        with transaction.atomic():
-            # Extract related data
-            recipients_emails = validated_data.pop("recipients", [])
-            cc_emails = validated_data.pop("cc", [])
-            bcc_emails = validated_data.pop("bcc", [])
-            attachments = validated_data.pop("attachments", [])
+        is_draft = validated_data.get('is_draft', False)
+        
+        # Extract related data
+        recipients_emails = validated_data.pop("recipients", [])
+        cc_emails = validated_data.pop("cc", [])
+        bcc_emails = validated_data.pop("bcc", [])
+        attachments = validated_data.pop("attachments", [])
 
-            # Get the currently authenticated user as the sender
-            sender = self.context["request"].user
+        # Get the currently authenticated user as the sender
+        sender = self.context["request"].user
 
-            # Convert email addresses to User instances
-            recipients = User.objects.filter(email__in=recipients_emails)
-            cc = (
-                User.objects.filter(email__in=cc_emails)
-                if cc_emails
-                else User.objects.none()
+        # Find or create users for recipients
+        print("doing recipients")
+        recipients = []
+        for email in recipients_emails:
+            user, created = User.objects.get_or_create(email=email)
+            print(user)
+            recipients.append(user)
+
+        cc = []
+        if cc_emails:
+            for email in cc_emails:
+                user, created = User.objects.get_or_create(email=email)
+                cc.append(user)
+
+        bcc = []
+        if bcc_emails:
+            for email in bcc_emails:
+                user, created = User.objects.get_or_create(email=email)
+                bcc.append(user)
+
+        # Validate recipients
+        if not recipients:
+            raise serializers.ValidationError(
+                {"recipients": "At least one recipient is required."}
             )
-            bcc = (
-                User.objects.filter(email__in=bcc_emails)
-                if bcc_emails
-                else User.objects.none()
-            )
 
-            # Validate recipients
-            if len(recipients) != len(recipients_emails):
-                raise serializers.ValidationError(
-                    {"recipients": "One or more recipient emails are invalid."}
+        # Create email first
+        email = Email.objects.create(sender=sender, **validated_data)
+
+        # Set recipients AFTER creating the email
+        email.recipients.set(recipients)
+        if cc:
+            email.cc.set(cc)
+        if bcc:
+            email.bcc.set(bcc)
+
+        # Handle attachments (similar to previous implementation)
+        if attachments:
+            for attachment_data in attachments:
+                attachment = Attachment.objects.create(
+                    file=attachment_data,
+                    filename=attachment_data.name,
+                    content_type=attachment_data.content_type,
                 )
+                email.attachments.add(attachment)
 
-            if cc_emails and len(cc) != len(cc_emails):
-                raise serializers.ValidationError(
-                    {"cc": "One or more CC emails are invalid."}
-                )
+        reply_to = validated_data.pop("reply_to", None)
+        if reply_to:
+            email.reply_to = reply_to
 
-            if bcc_emails and len(bcc) != len(bcc_emails):
-                raise serializers.ValidationError(
-                    {"bcc": "One or more BCC emails are invalid."}
-                )
-
-            # Create email
-            email = Email.objects.create(sender=sender, **validated_data)
-
-            # Set recipients, cc, and bcc
-            email.recipients.set(recipients)
-            if cc_emails:
-                email.cc.set(cc)
-            if bcc_emails:
-                email.bcc.set(bcc)
-
-            # Handle attachments
-            if attachments:
-                for attachment_data in attachments:
-                    attachment = Attachment.objects.create(
-                        file=attachment_data,
-                        filename=attachment_data.name,
-                        content_type=attachment_data.content_type,
-                    )
-                    email.attachments.add(attachment)
-
-            return email
+        return email
 
 
 class EmailDetailSerializer(
@@ -459,3 +484,62 @@ class EmailDetailSerializer(
     def get_replies(self, obj):
         # Serialize replies, possibly with a simplified serializer
         return EmailSerializer(obj.replies.all(), many=True, context=self.context).data
+
+
+class OtherUserProfileSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+    birthdate = serializers.DateField(format="%Y-%m-%d")
+
+    class Meta:
+        model = UserProfile
+        fields = ["first_name", "last_name", "birthdate", "bio"]
+
+
+class SimplifiedEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Email
+        fields = ["id"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    related_email = SimplifiedEmailSerializer(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "message",
+            "is_read",
+            "created_at",
+            "notification_type",
+            "related_email",
+        ]
+        read_only_fields = [
+            "message",
+            "created_at",
+            "notification_type",
+            "related_email",
+        ]
+
+class PhoneNumberSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=20)
+
+class VerificationCodeSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=20)
+    code = serializers.CharField(max_length=6)
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class Enable2FASerializer(serializers.Serializer):
+    pass
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    phone_number = serializers.CharField(max_length=20)
