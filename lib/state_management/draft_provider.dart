@@ -31,7 +31,7 @@ class DraftEmail {
         'bccRecipients': bccRecipients,
         'subject': subject,
         'body': body,
-        'attachments': attachments?.map((a) => a.path).toList(),
+        // 'attachments': attachments?.map((a) => a.path).toList(),
         'createdAt': createdAt.toIso8601String(),
       };
 

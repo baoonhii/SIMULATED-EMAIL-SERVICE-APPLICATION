@@ -16,83 +16,93 @@ class WebSocketService {
   final UserNotificationProvider _notificationProvider;
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
-  static const int MAX_RECONNECT_ATTEMPTS = 5;
+  static const int _maxReconnectAttempts = 5;
 
   WebSocketService(this._emailsProvider, this._notificationProvider);
 
   Future<void> connect() async {
-    final prefs = await SharedPreferences.getInstance();
-    final sessionToken = prefs.getString('session_token');
+    final sessionToken = await _getSessionToken();
+    if (sessionToken == null) {
+      print(
+          'No session token found. Unable to establish WebSocket connection.');
+      return;
+    }
 
-    print('Session Token: $sessionToken'); // Debug print session token
     _reconnectAttempts++;
-
     try {
-      _channel = WebSocketChannel.connect(
-        Uri.parse('ws://$ROOT/ws/emails/?token=$sessionToken'),
-      );
-
-      print('WebSocket connection established'); // Confirm connection
-      _reconnectAttempts =
-          0; // Reset reconnect attempts on successful connection
-
-      _channel!.stream.listen((message) {
-        print("Received WebSocket message: $message");
-        try {
-          final data = json.decode(message);
-          print("Decoded message: $data");
-          _handleWebSocketMessage(data);
-        } catch (e) {
-          print('Error decoding WebSocket message: $e');
-        }
-      }, onDone: () {
-        print('WebSocket connection closed');
-        _reconnect();
-      }, onError: (error) {
-        print('WebSocket error: $error');
-        _reconnect();
-      });
+      _initializeWebSocket(sessionToken);
+      _reconnectAttempts = 0; // Reset reconnect attempts on success
     } catch (e) {
       print('WebSocket connection failed: $e');
-      _reconnect();
+      _attemptReconnect();
+    }
+  }
+
+  Future<String?> _getSessionToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('session_token');
+  }
+
+  void _initializeWebSocket(String sessionToken) {
+    _channel = WebSocketChannel.connect(
+      Uri.parse('ws://$ROOT/ws/emails/?token=$sessionToken'),
+    );
+
+    print('WebSocket connection established');
+    _channel!.stream.listen(
+      _onMessageReceived,
+      onDone: () {
+        print('WebSocket connection closed');
+        _attemptReconnect();
+      },
+      onError: (error) {
+        print('WebSocket error: $error');
+        _attemptReconnect();
+      },
+    );
+  }
+
+  void _onMessageReceived(dynamic message) {
+    try {
+      final data = json.decode(message);
+      print('Received and decoded WebSocket message: $data');
+      _handleWebSocketMessage(data);
+    } catch (e) {
+      print('Error decoding WebSocket message: $e');
     }
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> data) {
-    print('Handling WebSocket message: $data');
     try {
-      if (data['type'] == 'email_notification') {
-        print("\n\n");
-        print('Email notification received');
-        print("Processing email");
-        print("\n\n");
-        final newEmail = Email.fromJson(data['email']);
-
-        // Determine the appropriate mailbox based on email properties
-        String? mailbox = _determineMailboxForEmail(newEmail);
-
-        // Add new email to cache
-        _emailsProvider.addNewEmailToCache(newEmail,
-            mailbox: mailbox ?? 'inbox');
-
-        print("Processing notification");
-        // Handle notification
-        print("\n\n");
-        print(data['notification']);
-        print("\n");
-
-        final newNotification = UserNotification.fromJson(data['notification']);
-        _notificationProvider.addNotification(newNotification);
-      } else if (data['type'] == 'email_update') {
-        // Handle email updates (read status, labels, etc.)
-        final updatedEmail = Email.fromJson(data['email']);
-        _emailsProvider.updateEmailInCache(updatedEmail);
-      } else {
-        print('Unknown message type: ${data['type']}');
+      switch (data['type']) {
+        case 'email_notification':
+          _processEmailNotification(data);
+          break;
+        case 'email_update':
+          _processEmailUpdate(data);
+          break;
+        default:
+          print('Unknown message type: ${data['type']}');
       }
     } catch (e) {
       print('Error handling WebSocket message: $e');
     }
+  }
+
+  void _processEmailNotification(Map<String, dynamic> data) {
+    print('Processing email notification');
+    final newEmail = Email.fromJson(data['email']);
+    final mailbox = _determineMailboxForEmail(newEmail) ?? 'inbox';
+    _emailsProvider.addNewEmailToCache(newEmail, mailbox: mailbox);
+
+    final newNotification = UserNotification.fromJson(data['notification']);
+    _notificationProvider.addNotification(newNotification);
+  }
+
+  void _processEmailUpdate(Map<String, dynamic> data) {
+    print('Processing email update');
+    final updatedEmail = Email.fromJson(data['email']);
+    _emailsProvider.updateEmailInCache(updatedEmail);
   }
 
   String? _determineMailboxForEmail(Email email) {
@@ -102,24 +112,18 @@ class WebSocketService {
     return 'inbox'; // Default mailbox
   }
 
-  void _reconnect() {
-    // Cancel any existing timer
+  void _attemptReconnect() {
     _reconnectTimer?.cancel();
 
-    // Check if max reconnect attempts reached
-    if (_reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+    if (_reconnectAttempts > _maxReconnectAttempts) {
       print('Max reconnect attempts reached. Stopping reconnection.');
       return;
     }
 
-    // Exponential backoff reconnection strategy
-    final duration = Duration(seconds: pow(2, _reconnectAttempts).toInt());
+    final retryDuration = Duration(seconds: pow(2, _reconnectAttempts).toInt());
+    print('Attempting to reconnect in ${retryDuration.inSeconds} seconds');
 
-    print('Attempting to reconnect in ${duration.inSeconds} seconds');
-
-    _reconnectTimer = Timer(duration, () {
-      connect();
-    });
+    _reconnectTimer = Timer(retryDuration, connect);
   }
 
   void dispose() {

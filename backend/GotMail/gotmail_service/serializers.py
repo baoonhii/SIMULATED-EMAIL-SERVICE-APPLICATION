@@ -1,9 +1,14 @@
 import json
 
 import magic
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import FileExtensionValidator
+from django.db.models.signals import m2m_changed, post_save
+from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -309,7 +314,10 @@ class EmailSerializer(serializers.ModelSerializer):
     )
     cc = serializers.SlugRelatedField(slug_field="email", many=True, read_only=True)
     bcc = serializers.SlugRelatedField(slug_field="email", many=True, read_only=True)
-    attachments = AttachmentSerializer(many=True, read_only=True)
+
+    # Modify the attachments serialization
+    attachments = serializers.SerializerMethodField()
+
     labels = LabelSerializer(many=True, read_only=True)
     is_reply = serializers.SerializerMethodField()
 
@@ -336,6 +344,13 @@ class EmailSerializer(serializers.ModelSerializer):
             "labels",
             "is_reply",
         ]
+
+    def get_attachments(self, obj):
+        attachments = obj.attachments.all()
+        serialized = AttachmentSerializer(
+            attachments, many=True, context=self.context
+        ).data
+        return serialized
 
     def get_is_reply(self, obj):
         return obj.reply_to is not None
@@ -408,8 +423,8 @@ class CreateEmailSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        is_draft = validated_data.get('is_draft', False)
-        
+        is_draft = validated_data.get("is_draft", False)
+
         # Extract related data
         recipients_emails = validated_data.pop("recipients", [])
         cc_emails = validated_data.pop("cc", [])
@@ -445,31 +460,131 @@ class CreateEmailSerializer(serializers.ModelSerializer):
                 {"recipients": "At least one recipient is required."}
             )
 
-        # Create email first
-        email = Email.objects.create(sender=sender, **validated_data)
-
-        # Set recipients AFTER creating the email
-        email.recipients.set(recipients)
-        if cc:
-            email.cc.set(cc)
-        if bcc:
-            email.bcc.set(bcc)
-
-        # Handle attachments (similar to previous implementation)
+        attachment_objects = []
         if attachments:
             for attachment_data in attachments:
-                attachment = Attachment.objects.create(
-                    file=attachment_data,
-                    filename=attachment_data.name,
-                    content_type=attachment_data.content_type,
-                )
-                email.attachments.add(attachment)
+                try:
+                    print("Processing attachment:", attachment_data)
+                    print("Attachment name:", attachment_data.name)
+                    print("Attachment content type:", attachment_data.content_type)
 
-        reply_to = validated_data.pop("reply_to", None)
-        if reply_to:
-            email.reply_to = reply_to
+                    attachment = Attachment.objects.create(
+                        file=attachment_data,
+                        filename=attachment_data.name,
+                        content_type=attachment_data.content_type,
+                    )
+                    attachment_objects.append(attachment)
+                except Exception as e:
+                    print(f"Error creating attachment: {e}")
+
+        email = Email.objects.create(sender=sender, **validated_data)
+        # Set recipients, CC, and BCC
+        email.recipients.set(recipients)
+        email.cc.set(cc)
+        email.bcc.set(bcc)
+        # Add attachments
+        email.attachments.add(*attachment_objects)
+
+        # Notify recipients only after everything is set
+        notify_recipients(email)
 
         return email
+
+
+def notify_recipients(email):
+    recipients = set(email.recipients.all())
+    recipients.update(email.cc.all())
+    recipients.update(email.bcc.all())
+
+    if not recipients:
+        print("No recipients to notify")
+        return
+
+    email_data = EmailSerializer(email).data
+    channel_layer = get_channel_layer()
+
+    for recipient in recipients:
+        try:
+            notification = Notification.objects.create(
+                user=recipient,
+                message=f"You have a new email from {email.sender.first_name} {email.sender.last_name}!",
+                related_email=email,
+                notification_type="email",
+            )
+            notification_data = NotificationSerializer(notification).data
+            message = {
+                "type": "email_notification",
+                "email": email_data,
+                "notification": notification_data,
+            }
+            group = f"user_{recipient.id}_emails"
+            async_to_sync(channel_layer.group_send)(group, message)
+
+            handle_auto_reply(email, recipient)
+        except Exception as e:
+            print(f"Error notifying user {recipient.id}: {e}")
+
+def handle_auto_reply(email: Email, recipient):
+    print("handling auto reply")
+    try:
+        if not email.is_auto_replied:
+            user_settings = UserSettings.objects.get(user=recipient)
+            print("Found user")
+            if user_settings.auto_reply_enabled:
+                auto_reply_message = user_settings.auto_reply_message
+                auto_reply_email = Email.objects.create(
+                    sender=recipient,
+                    subject=f"Re: {email.subject}",
+                    body=plain_text_to_quill_delta(auto_reply_message),
+                    sent_at=timezone.now(),
+                    is_auto_replied=True,
+                    reply_to=email,
+                )
+                # Set recipients using the set() method
+                auto_reply_email.recipients.set([email.sender])
+                auto_reply_email.save()  # Ensure the email is saved
+
+                # Serialize auto-reply email data
+                auto_reply_email_data = EmailSerializer(auto_reply_email).data
+
+                # Create Notification object for auto-reply
+                auto_reply_notification = Notification.objects.create(
+                    user=email.sender,
+                    message=f"You have received an auto-reply from {recipient.first_name} {recipient.last_name}.",
+                    related_email=auto_reply_email,
+                    notification_type="email",
+                )
+
+                # Serialize auto-reply notification data
+                auto_reply_notification_data = NotificationSerializer(
+                    auto_reply_notification
+                ).data
+
+                # Combine auto-reply email and notification data
+                auto_reply_message = {
+                    "type": "email_notification",
+                    "email": auto_reply_email_data,
+                    "notification": auto_reply_notification_data,
+                }
+
+                print()
+                print()
+
+                print(auto_reply_notification_data)
+
+                group = f"user_{email.sender.id}_emails"
+                print(f"Sending auto-reply to group: {group}")
+                async_to_sync(get_channel_layer().group_send)(group, auto_reply_message)
+    except UserSettings.DoesNotExist:
+        print(f"No user settings found for user {recipient.id}")
+    except Exception as e:
+        print(f"Error handling auto-reply for user {recipient.id}: {e}")
+
+
+def plain_text_to_quill_delta(text):
+    # Convert plain text to Quill Delta format
+    delta = f'[{{"insert": "{text}\\n"}}]'
+    return delta
 
 
 class EmailDetailSerializer(
@@ -522,23 +637,29 @@ class NotificationSerializer(serializers.ModelSerializer):
             "related_email",
         ]
 
+
 class PhoneNumberSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=20)
+
 
 class VerificationCodeSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=20)
     code = serializers.CharField(max_length=6)
 
+
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
+
 class Enable2FASerializer(serializers.Serializer):
     pass
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField()
     new_password = serializers.CharField(write_only=True)
+
 
 class ForgetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()

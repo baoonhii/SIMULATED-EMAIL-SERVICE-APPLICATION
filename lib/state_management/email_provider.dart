@@ -24,14 +24,14 @@ class EmailsProvider extends ChangeNotifier {
 
   void addNewEmailToCache(Email newEmail, {String mailbox = 'inbox'}) {
     _emailCache.putIfAbsent(mailbox, () => []);
+    print("Adding to cache");
+    print(newEmail);
+    print(newEmail.attachments);
 
-    if (!_emailCache[mailbox]!
-        .any((e) => e.message_id == newEmail.message_id)) {
-      _emailCache[mailbox]!.insert(0, newEmail);
-      _emailIdMap[newEmail.message_id] = newEmail;
-      _cacheTimes[mailbox] = DateTime.now();
-      notifyListeners();
-    }
+    _emailCache[mailbox]!.insert(0, newEmail);
+    _emailIdMap[newEmail.message_id] = newEmail;
+    _cacheTimes[mailbox] = DateTime.now();
+    notifyListeners();
   }
 
   @override
@@ -204,7 +204,7 @@ class EmailsProvider extends ChangeNotifier {
     _hasError = false;
     _errorMessage = '';
     _filteredEmails.clear();
-    fetchEmails(mailbox: mailbox);
+    fetchEmails(mailbox: mailbox, forceRefresh: true);
   }
 
   void filterEmails(String? keyword,
@@ -242,8 +242,11 @@ class EmailsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchEmails({String mailbox = 'inbox'}) async {
-    if (_isCacheFresh(mailbox)) {
+  Future<void> fetchEmails({
+    String mailbox = 'inbox',
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _isCacheFresh(mailbox)) {
       _isLoading = false;
       notifyListeners();
       return;

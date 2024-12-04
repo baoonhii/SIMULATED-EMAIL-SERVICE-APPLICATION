@@ -35,9 +35,9 @@ class UserNotificationProvider with ChangeNotifier {
       _notifications = [];
 
       for (dynamic json in (response as List)) {
-        print(json);
+        // print(json);
         _notifications.add(UserNotification.fromJson(json));
-        print("\n");
+        // print("\n");
       }
 
       notifyListeners();
