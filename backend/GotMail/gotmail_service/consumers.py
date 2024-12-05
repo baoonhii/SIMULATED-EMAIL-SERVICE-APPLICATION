@@ -7,7 +7,7 @@ from django.utils import timezone
 
 
 class EmailConsumer(AsyncWebsocketConsumer):
-    active_connections = {} # type: ignore  # {user_id: [channel_name1, channel_name2, ...]}
+    active_connections = {}  # type: ignore  # {user_id: [channel_name1, channel_name2, ...]}
 
     async def connect(self):
         self.token = self.scope["query_string"].decode("utf-8").split("=")[1]
@@ -33,15 +33,22 @@ class EmailConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         if hasattr(self, "group_name"):
-            print(f"Disconnecting WebSocket: {self.channel_name} for {self.group_name}")
+            try:
+                print(
+                    f"Disconnecting WebSocket: {self.channel_name} for {self.group_name}"
+                )
 
-            # Remove this connection from the group and active connections
-            await self.channel_layer.group_discard(self.group_name, self.channel_name)
-            self.active_connections[self.user.id].remove(self.channel_name)
+                # Remove this connection from the group and active connections
+                await self.channel_layer.group_discard(
+                    self.group_name, self.channel_name
+                )
+                self.active_connections[self.user.id].remove(self.channel_name)
 
-            # Clean up if no active connections remain for this user
-            if not self.active_connections[self.user.id]:
-                del self.active_connections[self.user.id]
+                # Clean up if no active connections remain for this user
+                if not self.active_connections[self.user.id]:
+                    del self.active_connections[self.user.id]
+            except Exception as e:
+                print(e)
 
     async def email_notification(self, event):
         print(self.user)

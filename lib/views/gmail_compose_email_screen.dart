@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -21,10 +20,6 @@ import '../utils/other.dart';
 import '../utils/parsers.dart';
 import '../other_widgets/general.dart';
 import '../state_management/email_compose_provider.dart';
-
-extension on EmailComposeScreen {
-  bool get isDraftEdit => draftToEdit != null;
-}
 
 extension on _EmailComposeScreenState {
   void _autosaveDraft() {

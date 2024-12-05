@@ -6,8 +6,6 @@ from channels.layers import get_channel_layer
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import FileExtensionValidator
-from django.db.models.signals import m2m_changed, post_save
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -423,8 +421,6 @@ class CreateEmailSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        is_draft = validated_data.get("is_draft", False)
-
         # Extract related data
         recipients_emails = validated_data.pop("recipients", [])
         cc_emails = validated_data.pop("cc", [])
@@ -500,6 +496,8 @@ def notify_recipients(email):
         print("No recipients to notify")
         return
 
+    print(recipients)
+
     email_data = EmailSerializer(email).data
     channel_layer = get_channel_layer()
 
@@ -523,6 +521,7 @@ def notify_recipients(email):
             handle_auto_reply(email, recipient)
         except Exception as e:
             print(f"Error notifying user {recipient.id}: {e}")
+
 
 def handle_auto_reply(email: Email, recipient):
     print("handling auto reply")

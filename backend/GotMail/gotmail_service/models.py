@@ -1,5 +1,3 @@
-# from .validators import phone_regex
-import random
 import uuid
 
 from django.contrib.auth.models import (
@@ -11,8 +9,6 @@ from django.db import models
 from django.utils import timezone
 from pydantic import ValidationError
 
-from twilio.rest import Client
-from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
@@ -50,10 +46,10 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150, unique=True, blank=True, null=True
     )  # For admin, if needed
-    
+
     password_reset_token = models.CharField(max_length=255, blank=True, null=True)
     password_reset_expires = models.DateTimeField(blank=True, null=True)
-    
+
     verification_code = models.CharField(max_length=6, blank=True, null=True)
     verification_code_expires = models.DateTimeField(blank=True, null=True)
 
@@ -74,12 +70,12 @@ class User(AbstractUser):
         related_name="gotmail_user_set",  # Unique related name
         blank=True,
     )
-    
+
     def generate_password_reset_token(self):
         self.password_reset_token = str(uuid.uuid4())
         self.password_reset_expires = timezone.now() + timezone.timedelta(hours=1)
         self.save()
-    
+
     def generate_verification_code(self):
         self.verification_code = str(uuid.uuid4())[:6]
         self.verification_code_expires = timezone.now() + timezone.timedelta(minutes=10)
@@ -100,6 +96,7 @@ class User(AbstractUser):
         self.session_expiry = timezone.now() + timezone.timedelta(days=30)
         self.save()
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     profile_picture = models.ImageField(
@@ -108,6 +105,7 @@ class UserProfile(models.Model):
     bio = models.TextField(blank=True)  # Add a bio field
     birthdate = models.DateField(blank=True, null=True)  # Add birthdate field
     two_factor_enabled = models.BooleanField(default=False)
+
 
 class Email(models.Model):
     message_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -228,7 +226,6 @@ class Notification(models.Model):
         choices=[
             ("email", "Email"),
             ("system", "System"),
-            # Add more types as needed
         ],
     )
     related_email = models.ForeignKey(

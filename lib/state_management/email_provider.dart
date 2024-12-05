@@ -207,12 +207,16 @@ class EmailsProvider extends ChangeNotifier {
     fetchEmails(mailbox: mailbox, forceRefresh: true);
   }
 
-  void filterEmails(String? keyword,
-      {DateTime? startDate,
-      DateTime? endDate,
-      bool hasAttachments = false,
-      String? label,
-      String mailbox = "inbox"}) {
+  void filterEmails(
+    String? keyword, {
+    DateTime? startDate,
+    DateTime? endDate,
+    bool hasAttachments = false,
+    String? label,
+    String mailbox = "inbox",
+  }) {
+    print(keyword);
+    print("Searching in $mailbox");
     if ((keyword == null || keyword.isEmpty) &&
         startDate == null &&
         endDate == null &&
@@ -233,11 +237,17 @@ class EmailsProvider extends ChangeNotifier {
             !hasAttachments || email.attachments.isNotEmpty;
         bool matchesLabel = label == null ||
             email.labels.any((emailLabel) => emailLabel.displayName == label);
+        print("Here");
+        print("matchesKeyword: $matchesKeyword");
+        print("matchesDateRange: $matchesDateRange");
+        print("matchesAttachments: $matchesAttachments");
+        print("matchesLabel: $matchesLabel");
         return matchesKeyword &&
             matchesDateRange &&
             matchesAttachments &&
             matchesLabel;
       }).toList();
+      print(_filteredEmails);
     }
     notifyListeners();
   }
@@ -251,6 +261,8 @@ class EmailsProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
+
+    print("Fetching emails");
 
     try {
       _isLoading = true;

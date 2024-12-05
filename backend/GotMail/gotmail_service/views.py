@@ -1,18 +1,10 @@
-import random
-import string
 from typing import Any, Dict
 
-from django.contrib.auth import get_user_model, login, logout
-from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import login, logout
 from django.core.mail import EmailMessage
 from django.db.models import Q
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, serializers, status, viewsets
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.decorators import action
@@ -85,14 +77,16 @@ class BaseUserSettingsView(APIView):
     authentication_classes = [SessionTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_or_create_user_settings(self) -> UserSettings:
+    def get_or_create_user_settings(self):
         """
         Get or create UserSettings for the authenticated user.
 
         Returns:
             UserSettings: User settings object
         """
-        return UserSettings.objects.get_or_create(user=self.request.user)[0]
+        if User.objects.get(user=self.request.user):
+            return UserSettings.objects.get_or_create(user=self.request.user)[0]
+        return None
 
     def handle_settings_update(
         self,
@@ -113,13 +107,14 @@ class BaseUserSettingsView(APIView):
         """
         try:
             user_settings = self.get_or_create_user_settings()
-            serializer = serializer_class(user_settings, data=data, partial=partial)
+            if user_settings:
+                serializer = serializer_class(user_settings, data=data, partial=partial)
 
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data)
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response(
@@ -185,42 +180,64 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
-            user = serializer.validated_data["user"]
+        # Convert phone number to string to ensure compatibility
+        request_data = request.data.copy()
+        request_data["phone_number"] = str(request_data.get("phone_number", ""))
 
-            # Check if 2FA is enabled
-            try:
-                user_profile = UserProfile.objects.get(user=user)
-                if user_profile.two_factor_enabled:
-                    # Generate and send 2FA code
-                    user.generate_verification_code()
+        serializer = LoginSerializer(data=request_data, context={"request": request})
 
-                    # Send verification email
-                    email = create_2fa_email(
-                        request, user, user.email, user.verification_code
-                    )
-                    email.send(fail_silently=False)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                user = serializer.validated_data["user"]
 
-                    print(email)
+                # Check if 2FA is enabled
+                try:
+                    user_profile = UserProfile.objects.get(user=user)
+                    if user_profile.two_factor_enabled:
+                        # Generate and send 2FA code
+                        user.generate_verification_code()
 
-                    return Response(
-                        {"requires_2fa": True, "phone_number": user.phone_number},
-                        status=status.HTTP_206_PARTIAL_CONTENT,
-                    )
-            except UserProfile.DoesNotExist:
-                pass
+                        try:
+                            # Send verification email
+                            email = create_2fa_email(
+                                request, user, user.email, user.verification_code
+                            )
+                            email.send(fail_silently=False)
 
-            # Regular login flow
-            user.generate_session_token()
-            login(request, user)
-            return Response(
-                {
-                    "user": UserSerializer(user).data,
-                    "session_token": user.session_token,
-                },
-                status=status.HTTP_200_OK,
-            )
+                            return Response(
+                                {
+                                    "requires_2fa": True,
+                                    "phone_number": user.phone_number,
+                                },
+                                status=status.HTTP_206_PARTIAL_CONTENT,
+                            )
+                        except Exception as email_error:
+                            print(f"2FA email sending failed: {email_error}")
+                            return Response(
+                                {
+                                    "detail": f"Failed to send verification code, {email_error}"
+                                },
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            )
+
+                except UserProfile.DoesNotExist:
+                    pass
+
+                # Regular login flow
+                user.generate_session_token()
+                login(request, user)
+                return Response(
+                    {
+                        "user": UserSerializer(user).data,
+                        "session_token": user.session_token,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+        except serializer.ValidationError as e:
+            # More detailed error handling
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -466,8 +483,6 @@ class EmailListView(ListAPIView):
     serializer_class = EmailSerializer
     authentication_classes = [SessionTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = PageNumberPagination
-    page_size = 20
 
     def get_queryset(self):
         """

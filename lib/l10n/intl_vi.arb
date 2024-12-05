@@ -136,5 +136,6 @@
     "pleaseEnterNewPassword": "Nhập mật khẩu mới",
     "confirmPasswordReset": "Xác nhận mật khẩu mới",
     "forgetPassword": "Quên mật khẩu",
-    "newPassword": "Mật khẩu mới"
+    "newPassword": "Mật khẩu mới",
+    "emailNotFound": "Không thấy email"
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
@@ -172,7 +173,7 @@ class AccountProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> register({
+  Future<Map<String, List<String>>> register({
     required String firstName,
     required String lastName,
     required String email,
@@ -180,19 +181,52 @@ class AccountProvider extends ChangeNotifier {
     required String password,
     required String password2,
   }) async {
-    await makeAPIRequest(
-      url: Uri.parse(API_Endpoints.AUTH_REGISTER.value),
-      method: 'POST',
-      requiresAuth: false,
-      body: {
-        'first_name': firstName,
-        'last_name': lastName,
-        'email': email,
-        'phone_number': phoneNumber,
-        'password': password,
-        'password2': password2,
-      },
-    );
+    try {
+      print('Attempting registration with:');
+      print('First Name: $firstName');
+      print('Last Name: $lastName');
+      print('Email: $email');
+      print('Phone Number: $phoneNumber');
+
+      final responseData = await makeAPIRequest(
+        url: Uri.parse(API_Endpoints.AUTH_REGISTER.value),
+        method: 'POST',
+        requiresAuth: false,
+        body: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'phone_number': phoneNumber,
+          'password': password,
+          'password2': password2,
+        },
+      );
+
+      print('Received response: $responseData');
+
+      // Check if the response contains expected user data
+      if (responseData != null && responseData['id'] != null) {
+        return {}; // Successful registration
+      } else {
+        // Unexpected response format
+        return {
+          'general': ['Unexpected registration response']
+        };
+      }
+    } catch (e) {
+      print('Registration error: $e');
+
+      // More detailed error handling
+      if (e is Exception) {
+        return {
+          'general': [e.toString()]
+        };
+      } else {
+        return {
+          'general': ['An unexpected error occurred during registration']
+        };
+      }
+    }
   }
 
   Future<void> updateProfile({

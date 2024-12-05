@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../other_widgets/general.dart';
 import 'gmail_base_screen.dart';
 import '../constants.dart';
 import '../state_management/email_provider.dart';
@@ -77,18 +78,23 @@ class _EmailNotificationsState extends State<EmailNotifications> {
           !notification.isRead,
         );
         if (!notification.isRead) {
-          Navigator.pushNamed(
-            context,
-            MailRoutes.EMAIL_DETAIL.value,
-            arguments: {
-              "email": Provider.of<EmailsProvider>(context, listen: false)
-                  .emails
-                  .firstWhere(
-                    (email) => email.message_id == notification.emailID,
-                  ),
-              "mailbox": MailBox.INBOX.value
-            },
-          );
+          final emailsProvider =
+              Provider.of<EmailsProvider>(context, listen: false);
+          try {
+            final email = emailsProvider.emails.firstWhere(
+              (email) => email.message_id == notification.emailID,
+            );
+            Navigator.pushNamed(
+              context,
+              MailRoutes.EMAIL_DETAIL.value,
+              arguments: {"email": email, "mailbox": MailBox.INBOX.value},
+            );
+          } catch (e) {
+            showSnackBar(
+              context,
+              AppLocalizations.of(context)!.emailNotFound,
+            );
+          }
         }
       },
     );
