@@ -44,7 +44,7 @@ PyJWT==2.10.1
 pyOpenSSL==24.3.0
 pypng==0.20220715.0
 python-magic==0.4.27
-python-magic-bin==0.4.14
+python-magic-bin
 qrcode==7.4.2
 redis==5.2.0
 requests==2.32.3

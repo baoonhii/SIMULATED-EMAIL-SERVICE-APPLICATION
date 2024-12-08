@@ -49,9 +49,10 @@ Stack:
         python manage.py migrate
       ```
 
-   - Collect static files: `python manage.py collectstatic`
-   - Run the project: `python manage.py runserver`
-   - Create superuser: `python manage.py createsuperuser`
-   - Save requirements: `pip freeze > requirements.txt`
-4. Start the redis server for notif
-   - `redis-server.exe --port 6380`
+4. Load the sample data: `python GotMail\manage.py loaddata < dumped_data.json`
+5. Start the redis server for notif: `redis-server.exe --port 6380`
+
+
+## Usage
+
+Pre-loaded accounts in [stock_accounts.md](stock_accounts.md)

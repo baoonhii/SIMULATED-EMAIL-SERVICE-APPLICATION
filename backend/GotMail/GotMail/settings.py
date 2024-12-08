@@ -1,7 +1,6 @@
 from pathlib import Path
 from .super_secrets import (
     DB_PASSWORD,
-    DJANGO_SECRET_KEY,
     gmail_app_password,
     gmail_app_email,
 )
@@ -91,7 +90,7 @@ DATABASES = {
     }
 }
 
-SECRET_KEY = DJANGO_SECRET_KEY
+SECRET_KEY = "django-insecure--4*8pa%#^x67*j=l#=kbowawdc(x%-$y@zm2dtu_r(g&jn5tk_"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

@@ -84,9 +84,8 @@ class BaseUserSettingsView(APIView):
         Returns:
             UserSettings: User settings object
         """
-        if User.objects.get(user=self.request.user):
-            return UserSettings.objects.get_or_create(user=self.request.user)[0]
-        return None
+        return UserSettings.objects.get_or_create(user=self.request.user)[0]
+
 
     def handle_settings_update(
         self,
@@ -214,9 +213,7 @@ class LoginView(APIView):
                         except Exception as email_error:
                             print(f"2FA email sending failed: {email_error}")
                             return Response(
-                                {
-                                    "detail": f"Failed to send verification code, {email_error}"
-                                },
+                                {"detail": f"Failed to send verification code, {email_error}"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             )
 
